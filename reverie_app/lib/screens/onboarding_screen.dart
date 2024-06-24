@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../controllers/onboard_controller.dart';
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -7,8 +8,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
+  final OnboardController _controller = OnboardController();
 
   @override
   Widget build(BuildContext context) {
@@ -17,61 +17,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: Column(
         children: <Widget>[
           Expanded(
-            child: PageView(
-              controller: _pageController,
+            child: PageView.builder(
+              controller: _controller.pageController,
               onPageChanged: (int page) {
                 setState(() {
-                  _currentPage = page;
+                  _controller.onPageChanged(page);
                 });
               },
-              children: <Widget>[
-                OnboardPage(
-                  image: 'assets/on-board-1.png',
-                  title: 'Join Our Community',
-                  description: 'Stay connected with push notifications, follow your favorite vendors, and join a vibrant community of fashion lovers. Start your sustainable fashion journey today!',
-                  currentPage: _currentPage,
-                  pageController: _pageController,
-                ),
-                OnboardPage(
-                  image: 'assets/on-board-2.png',
-                  title: 'Secure Transactions & Order Tracking',
-                  description: 'Shop with confidence using our secure payment gateway and track your orders from purchase to delivery with real-time updates.',
-                  currentPage: _currentPage,
-                  pageController: _pageController,
-                ),
-                OnboardPage(
-                  image: 'assets/on-board-3.png',
-                  title: 'Seamless Browsing and Selling',
-                  description: 'Easily browse through our vast collection of thrift items or list your own with our in-app camera.',
-                  currentPage: _currentPage,
-                  pageController: _pageController,
-                ),
-                OnboardPage(
-                  image: 'assets/on-board-4.png',
-                  title: 'Welcome To Reverie',
-                  description: 'Discover unique, pre-loved fashion. Join our community of thrift enthusiasts and find your next favorite piece!',
-                  currentPage: _currentPage,
-                  pageController: _pageController,
-                ),
-              ],
+              itemCount: _controller.pages.length,
+              itemBuilder: (context, index) {
+                final page = _controller.pages[index];
+                return OnboardPage(
+                  image: page.image,
+                  title: page.title,
+                  description: page.description,
+                  currentPage: _controller.currentPage,
+                  pageController: _controller.pageController,
+                );
+              },
             ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(4, (index) => buildDot(index, context)),
+            children: List.generate(_controller.pages.length, (index) => buildDot(index, context)),
           ),
           SizedBox(height: 20),
-          _currentPage == 3
-              ? Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to the next screen
-                    },
-                    child: Text("Let's Get Started!"),
-                  ),
-                )
-              : Container(),
         ],
       ),
     );
@@ -80,11 +50,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget buildDot(int index, BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 5),
-      height: _currentPage == index ? 10 : 6,
-      width: _currentPage == index ? 10 : 6,
+      height: _controller.currentPage == index ? 10 : 6,
+      width: _controller.currentPage == index ? 10 : 6,
       decoration: BoxDecoration(
-        color: _currentPage == index ? Colors.green : Colors.grey,
-        borderRadius: BorderRadius.circular(5),
+        color: _controller.currentPage == index ? Color(0xFF69734E) : Colors.grey,
+        borderRadius: BorderRadius.circular(10),
       ),
     );
   }
@@ -112,40 +82,73 @@ class OnboardPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Expanded(child: image.endsWith('.svg') ? SvgPicture.asset(image) : Image.asset(image)),
-          SizedBox(height: 5), // Reduced space
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-              color: Color(0xFF69734E),
+          image.endsWith('.svg')
+              ? SvgPicture.asset(image)
+              : Image.asset(image),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 5.0),
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+                color: Color(0xFF69734E),
+              ),
             ),
           ),
-          SizedBox(height: 5), // Reduced space
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontFamily: 'Poppins',
-              color: Colors.black,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+            child: Text(
+              description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w100,
+                fontFamily: 'Poppins',
+                color: Colors.black,
+              ),
             ),
           ),
-          SizedBox(height: 10), // Reduced space
           currentPage < 3
-              ? IconButton(
-                  icon: Image.asset('assets/arrow.png'),
-                  iconSize: 30,
-                  onPressed: () {
-                    pageController.nextPage(
-                      duration: Duration(milliseconds: 300),
-                      curve: Curves.easeIn,
-                    );
-                  },
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: IconButton(
+                    icon: Image.asset('assets/arrow.png'),
+                    iconSize: 30,
+                    onPressed: () {
+                      pageController.nextPage(
+                        duration: Duration(milliseconds: 300),
+                        curve: Curves.easeIn,
+                      );
+                    },
+                  ),
                 )
-              : Container(),
+              : Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Color(0xFF69734E), // Text color
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10), // Rounded corners
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Padding inside the button
+                    ),
+                    onPressed: () {
+                      // Navigate to the next screen
+                    },
+                    child: const Text(
+                      "Let's Get Started!",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
         ],
       ),
     );
