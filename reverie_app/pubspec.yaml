@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_svg: ^1.0.3 # If you are using SVG images
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -53,14 +54,30 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
 
+
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
-  uses-material-design: true
+uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  assets:
-     - assets/
+assets:
+  - assets/reverie-logo.svg
+  - assets/on-board-1.png
+  - assets/on-board-2.png
+  - assets/on-board-3.png
+  - assets/on-board-4.png
+  - assets/arrow.svg
+  - assets/on-board-1.svg
+  - assets/on-board-2.svg
+  - assets/on-board-3.svg
+  - assets/on-board-4.svg
+fonts:
+  - family: Poppins
+    fonts:
+      - asset: assets/fonts/Poppins-Regular.ttf
+      - asset: assets/fonts/Poppins-Bold.ttf
+        weight: 700
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
