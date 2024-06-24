@@ -68,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onPressed: () {
                       // Navigate to the next screen
                     },
-                    child: const Text("Let's Get Started!"),
+                    child: Text("Let's Get Started!"),
                   ),
                 )
               : Container(),
@@ -112,8 +112,8 @@ class OnboardPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Expanded(child: Image.asset(image)),
-          SizedBox(height: 10), // Reduced space
+          Expanded(child: image.endsWith('.svg') ? SvgPicture.asset(image) : Image.asset(image)),
+          SizedBox(height: 5), // Reduced space
           Text(
             title,
             style: TextStyle(
@@ -123,7 +123,7 @@ class OnboardPage extends StatelessWidget {
               color: Color(0xFF69734E),
             ),
           ),
-          SizedBox(height: 10), // Reduced space
+          SizedBox(height: 5), // Reduced space
           Text(
             description,
             textAlign: TextAlign.center,
@@ -136,7 +136,7 @@ class OnboardPage extends StatelessWidget {
           SizedBox(height: 10), // Reduced space
           currentPage < 3
               ? IconButton(
-                  icon: SvgPicture.asset('assets/arrow.svg'),
+                  icon: Image.asset('assets/arrow.png'),
                   iconSize: 30,
                   onPressed: () {
                     pageController.nextPage(

@@ -5,7 +5,7 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Image.asset('assets/reverie-logo.svg'),
+        child: Image.asset('assets/reverie-logo.png'),
       ),
     );
   }
