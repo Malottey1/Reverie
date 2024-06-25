@@ -38,6 +38,7 @@ flutter:
     - assets/shoes.png
     - assets/bags.png
     - assets/watches.png
+    - assets/mm-logo.png
     
 
   fonts:
