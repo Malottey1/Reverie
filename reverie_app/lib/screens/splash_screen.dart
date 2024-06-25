@@ -1,28 +1,42 @@
 import 'package:flutter/material.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _navigateToOnboarding();
+  }
+
+  _navigateToOnboarding() async {
+    await Future.delayed(Duration(seconds: 3), () {});
+    Navigator.pushReplacementNamed(context, '/onboarding');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFDDDBD3),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Spacer for top
-          SizedBox(height: 50),
-          // Center logo
-          Center(
-            child: Image.asset(
-              'assets/reverie-logo.png',
-              height: 100,
+          Expanded(
+            child: Center(
+              child: Image.asset(
+                'assets/reverie-logo.png',
+                height: 100,
+              ),
             ),
           ),
-          // Spacer for center
-          SizedBox(height: 50),
-          // Powered by section
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
-            child: Column(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
@@ -33,7 +47,7 @@ class SplashScreen extends StatelessWidget {
                     color: Color(0xFF69734E),
                   ),
                 ),
-                SizedBox(height: 5),
+                SizedBox(width: 5),
                 Image.asset(
                   'assets/mm-logo.png',
                   height: 20,
