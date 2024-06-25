@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../controllers/onboard_controller.dart';
+import 'register_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -137,7 +138,10 @@ class OnboardPage extends StatelessWidget {
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), // Padding inside the button
                     ),
                     onPressed: () {
-                      // Navigate to the next screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegisterScreen()),
+                      );
                     },
                     child: const Text(
                       "Let's Get Started!",

@@ -28,6 +28,17 @@ flutter:
     - assets/on-board-3.png
     - assets/on-board-4.png
     - assets/arrow.png
+    - assets/sneakers.png
+    - assets/jackets.png
+    - assets/women.png
+    - assets/men.png
+    - assets/sweaters.png
+    - assets/handbags.png
+    - assets/kids.png
+    - assets/shoes.png
+    - assets/bags.png
+    - assets/watches.png
+    
 
   fonts:
     - family: Poppins
