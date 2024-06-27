@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:reverie_app/screens/order_history_screen.dart';
 import '../widgets/category_item.dart';
 import '../widgets/product_item.dart';
 import 'terms_and_conditions.dart';  // Import the Terms and Conditions screen
+import 'search_screen.dart'; // Import the Search Screen
+import 'product_details_screen.dart'; // Import the Product Details Screen
+import 'cart_screen.dart';
+import 'store_list_screen.dart';
+import 'settings_screen.dart';
+import 'order_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,10 +19,25 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
-    if (index == 2) {  // Index for the Sell button
+    if (index == 1) {  // Index for the Market button
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => StoreListScreen()),
+      );
+    } else if (index == 2) {  // Index for the Sell button
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => TermsConditionsScreen()),
+      );
+    } else if (index == 3) {  // Index for the Sell button
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
+      );
+    }  else if (index == 4) {  
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SettingsScreen()),
       );
     } else {
       setState(() {
@@ -42,7 +64,24 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.search),
             color: Color(0xFF69734E),
             onPressed: () {
-              // Handle search action
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => SearchScreen(),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(-1.0, 0.0);  // Slide from the left
+                    const end = Offset.zero;
+                    const curve = Curves.ease;
+
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+                    return SlideTransition(
+                      position: animation.drive(tween),
+                      child: child,
+                    );
+                  },
+                ),
+              );
             },
           ),
           actions: [
@@ -50,7 +89,10 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(Icons.shopping_cart),
               color: Color(0xFF69734E),
               onPressed: () {
-                // Handle cart action
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CartScreen()),
+                );
               },
             ),
           ],
@@ -92,8 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.category),
-              label: 'Categories',
+              icon: Icon(Icons.business),
+              label: 'Market',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.add_box),
@@ -125,14 +167,54 @@ class _HomeScreenState extends State<HomeScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  ProductItem(imagePath: imagePath, title: title),
-                  ProductItem(imagePath: imagePath, title: title),
-                  ProductItem(imagePath: imagePath, title: title),
-                  ProductItem(imagePath: imagePath, title: title),
-                  ProductItem(imagePath: imagePath, title: title),
-                  ProductItem(imagePath: imagePath, title: title),
-                  ProductItem(imagePath: imagePath, title: title),
-                  ProductItem(imagePath: imagePath, title: title),
+                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                    );
+                  }),
+                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                    );
+                  }),
+                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                    );
+                  }),
+                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                    );
+                  }),
+                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                    );
+                  }),
+                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                    );
+                  }),
+                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                    );
+                  }),
+                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                    );
+                  }),
                 ],
               ),
             ),

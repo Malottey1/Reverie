@@ -231,7 +231,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
             SizedBox(height: 10),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 220, 102, 94),
+                backgroundColor: const Color.fromARGB(255, 78, 118, 137),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),

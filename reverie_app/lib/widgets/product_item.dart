@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 class ProductItem extends StatelessWidget {
   final String imagePath;
   final String title;
+  final VoidCallback onBuyNow;
 
-  ProductItem({required this.imagePath, required this.title});
+  ProductItem({required this.imagePath, required this.title, required this.onBuyNow});
 
   @override
   Widget build(BuildContext context) {
@@ -55,9 +56,7 @@ class ProductItem extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 5),
                   ),
-                  onPressed: () {
-                    // Handle shop now action
-                  },
+                  onPressed: onBuyNow,
                   child: const Text(
                     'Buy Now',
                     style: TextStyle(

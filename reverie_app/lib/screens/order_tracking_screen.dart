@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class VendorPendingTrackingScreen extends StatelessWidget {
+class OrderTrackingScreen extends StatelessWidget {
   final String orderId;
-  final String items;
+  final List<Map<String, String>> items;
   final String pickupStatus;
   final String estimatedDeliveryDate;
 
-  VendorPendingTrackingScreen({
+  OrderTrackingScreen({
     required this.orderId,
     required this.items,
     required this.pickupStatus,
@@ -29,25 +29,17 @@ class VendorPendingTrackingScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color(0xFFDDDBD3),
       appBar: AppBar(
-        backgroundColor: Color(0xFFDDDBD3),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        backgroundColor: Color(0xFF69734E),
         title: Text(
           'Tracking Details',
           style: TextStyle(
             fontFamily: 'Poppins',
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,8 +84,6 @@ class VendorPendingTrackingScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 10),
-        
-        SizedBox(height: 10),
         Center(
           child: Text(
             'To Ahmed',
@@ -136,18 +126,19 @@ class VendorPendingTrackingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemsInfo(String items) {
+  Widget _buildItemsInfo(List<Map<String, String>> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Item(s): $items',
+          'Item(s):',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 16,
             color: Colors.black,
           ),
         ),
+        ...items.map((item) => _buildOrderItem(item['name']!, item['imageUrl']!, item['price']!)).toList(),
       ],
     );
   }
@@ -159,14 +150,13 @@ class VendorPendingTrackingScreen extends StatelessWidget {
       'Your item has been picked up.',
       'Your item has been delivered.'
     ];
-  
+
     return Column(
-      
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 15),
         Text(
-          'Pickup Status:',
+          'Delivery Status:',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 16,
@@ -183,8 +173,7 @@ class VendorPendingTrackingScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 5,
-                      backgroundColor:
-                          statusIndex >= index ? Color(0xFF69734E) : Colors.grey,
+                      backgroundColor: statusIndex >= index ? Color(0xFF69734E) : Colors.grey,
                     ),
                     if (index != statuses.length - 1)
                       Container(
@@ -224,4 +213,66 @@ class VendorPendingTrackingScreen extends StatelessWidget {
       ],
     );
   }
+
+  Widget _buildOrderItem(String name, String imageUrl, String price) {
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.symmetric(vertical: 8.0),
+      color: Color(0xFFDDDBD3),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: Color(0xFF69734E)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                imageUrl,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF69734E),
+                ),
+              ),
+            ),
+            Text(
+              price,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                color: Color(0xFF69734E),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void main() {
+  runApp(MaterialApp(
+    home: OrderTrackingScreen(
+      orderId: '1234567890',
+      items: [
+        {'name': 'A-line Mini Dress', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$24.99'},
+        {'name': 'Fitted T-shirt', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$6.99'},
+        {'name': 'Draped One-shoulder Top', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$19.99'},
+        {'name': 'Regular Fit Cotton Shorts', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$4.99'},
+      ],
+      pickupStatus: 'Picked Up',
+      estimatedDeliveryDate: 'Within 3-5 business days',
+    ),
+  ));
 }

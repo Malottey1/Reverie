@@ -44,8 +44,10 @@ flutter:
     - assets/dress.jpg
     - assets/package.png
     - assets/boots.jpg
+    - assets/store1.png
     - assets/inventory.png
     - assets/trend_11902027.png
+
     
 
   fonts:
