@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/category_item.dart';
 import '../widgets/product_item.dart';
+import 'terms_and_conditions.dart';  // Import the Terms and Conditions screen
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -8,6 +9,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    if (index == 2) {  // Index for the Sell button
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => TermsConditionsScreen()),
+      );
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -64,10 +80,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: Color.fromARGB(0, 255, 255, 255),
+          backgroundColor: Colors.white,
           selectedItemColor: Color(0xFF69734E),
           unselectedItemColor: Colors.grey,
           showUnselectedLabels: true,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
