@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   flutter_svg: ^1.0.3
   cupertino_icons: ^1.0.6
+  image_picker: ^0.8.4+4
 
 dev_dependencies:
   flutter_test:
@@ -39,6 +40,12 @@ flutter:
     - assets/bags.png
     - assets/watches.png
     - assets/mm-logo.png
+    - assets/jacket.jpg
+    - assets/dress.jpg
+    - assets/package.png
+    - assets/boots.jpg
+    - assets/inventory.png
+    - assets/trend_11902027.png
     
 
   fonts:

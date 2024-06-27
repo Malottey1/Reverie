@@ -53,7 +53,7 @@ class ProductItem extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 5),
                   ),
                   onPressed: () {
                     // Handle shop now action
