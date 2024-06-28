@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/user.dart';
 import '/services/api_connection.dart'; // Assuming the path to ApiConnection class
+import 'package:art_sweetalert/art_sweetalert.dart';
 
 class RegisterController {
   final TextEditingController firstNameController = TextEditingController();
@@ -24,8 +25,7 @@ class RegisterController {
     final String birthday = birthdayController.text;
 
     if (password != confirmPassword) {
-      // Handle password mismatch
-      print('Passwords do not match');
+      _showErrorDialog(context, 'Passwords do not match');
       return;
     }
 
@@ -43,17 +43,40 @@ class RegisterController {
     try {
       final response = await api.registerUser(user.toJson());
       if (response['message'] == 'Registration successful') {
-        // Handle successful registration
-        print('Registration successful');
-        Navigator.pushReplacementNamed(context, '/login');
+        _showSuccessDialog(context);
       } else {
-        // Handle registration error
-        print('Registration failed: ${response['message']}');
+        _showErrorDialog(context, 'Registration failed: ${response['message']}');
       }
     } catch (e) {
-      // Handle network or other errors
-      print('Registration failed: $e');
+      _showErrorDialog(context, 'Registration failed: $e');
     }
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    ArtSweetAlert.show(
+      context: context,
+      artDialogArgs: ArtDialogArgs(
+        type: ArtSweetAlertType.success,
+        title: "Registration Successful",
+        text: "Welcome to Reverie!",
+        confirmButtonText: "Okay",
+        onConfirm: () {
+          Navigator.pushReplacementNamed(context, '/login');
+        },
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    ArtSweetAlert.show(
+      context: context,
+      artDialogArgs: ArtDialogArgs(
+        type: ArtSweetAlertType.danger,
+        title: "Error",
+        text: message,
+        confirmButtonText: "Okay",
+      ),
+    );
   }
 
   void dispose() {
