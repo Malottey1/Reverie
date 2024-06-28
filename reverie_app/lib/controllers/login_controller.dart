@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import '../screens/home_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../models/user.dart';
-import '../screens/home_screen.dart'; // Import HomeScreen
 
 class LoginController {
   final TextEditingController emailController = TextEditingController();
@@ -13,22 +14,17 @@ class LoginController {
     final String password = passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      // Handle empty fields
       _showErrorDialog(context, 'Please fill in all fields');
       return;
     }
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.100.61/api/reverie/login.php'), // Replace with your API URL
+        Uri.parse('http://192.168.100.61/api/reverie/login.php'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': email,
-          'password': password,
-        }),
+        body: json.encode({'email': email, 'password': password}),
       );
 
-      // Print the request and response for debugging
       print('Request URL: http://192.168.100.61/api/reverie/login.php');
       print('Request Body: ${json.encode({'email': email, 'password': password})}');
       print('Response Status Code: ${response.statusCode}');
@@ -37,6 +33,10 @@ class LoginController {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         if (responseData['message'] == 'Login successful') {
+          // Store the user ID in the UserProvider
+          final userId = responseData['user_id'];
+          Provider.of<UserProvider>(context, listen: false).setUserId(userId);
+
           // Handle successful login
           print('Login successful');
           Navigator.pushReplacement(
@@ -44,54 +44,45 @@ class LoginController {
             MaterialPageRoute(builder: (context) => HomeScreen()),
           );
         } else {
-          // Handle login error
           print('Login failed: ${responseData['message']}');
           _showErrorDialog(context, 'Login failed: ${responseData['message']}');
         }
       } else {
-        // Handle server error
         print('Server error: ${response.statusCode}');
         _showErrorDialog(context, 'Server error: ${response.statusCode}');
       }
     } catch (e) {
-      // Handle network or other errors
       print('Login failed: $e');
       _showErrorDialog(context, 'Login failed: $e');
     }
   }
 
   void _showErrorDialog(BuildContext context, String message) {
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(
-        'Try Again',
-        style: TextStyle(
-          fontFamily: 'Poppins', // Set Poppins font for the title
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          'Try Again',
+          style: TextStyle(fontFamily: 'Poppins'), // Set Poppins font for the title
         ),
-      ),
-      content: Text(
-        message,
-        style: TextStyle(
-          fontFamily: 'Poppins', // Set Poppins font for the content
+        content: Text(
+          message,
+          style: TextStyle(fontFamily: 'Poppins'), // Set Poppins font for the content
         ),
-      ),
-      actions: <Widget>[
-        TextButton(
-          child: Text(
-            'Okay',
-            style: TextStyle(
-              fontFamily: 'Poppins', // Set Poppins font for the button
+        actions: <Widget>[
+          TextButton(
+            child: Text(
+              'Okay',
+              style: TextStyle(fontFamily: 'Poppins'), // Set Poppins font for the button
             ),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
           ),
-          onPressed: () {
-            Navigator.of(ctx).pop();
-          },
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   void dispose() {
     emailController.dispose();

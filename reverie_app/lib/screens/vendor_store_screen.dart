@@ -80,28 +80,28 @@ class VendorStoreScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF69734E),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF69734E),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => VendorEditProfileScreen()),
-                        );
-                      },
-                      child: Text(
-                        'Edit Profile',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
+                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => VendorEditProfileScreen()),
+                      );
+                    },
+                    child: Text(
+                      'Edit Profile',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.white,
+                        fontSize: 16,
                       ),
                     ),
+                  ),
                   ],
                 ),
               ),
@@ -249,67 +249,91 @@ class VendorStoreScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProductItem(BuildContext context, String title, String price, String oldPrice, bool isOnSale) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 5,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  
+Widget _buildProductItem(BuildContext context, String title, String price, String oldPrice, bool isOnSale) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Color(0xFFDDDBD3), // Background color as specified
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Stack(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                'https://via.placeholder.com/150',
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+              ),
+              child: Image.asset(
+                'assets/men.png',
                 width: double.infinity,
-                height: 150,
+                height: 172,
                 fit: BoxFit.cover,
               ),
             ),
-            SizedBox(height: 5),
-            Text(
-              title,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                color: Colors.black,
-              ),
-            ),
-            SizedBox(height: 5),
-            Text(
-              price,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
             if (isOnSale)
-              Text(
-                oldPrice,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 12,
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
                   color: Colors.red,
-                  decoration: TextDecoration.lineThrough,
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    '-72%', // Discount percentage placeholder
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                  ),
                 ),
               ),
           ],
         ),
-      ),
-    );
-  }
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: Colors.black,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Text(
+            price,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              color: Color(0xFF69734E),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        if (isOnSale)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(
+              oldPrice,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                color: Colors.grey,
+                decoration: TextDecoration.lineThrough,
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
+}
 }
 
 void main() => runApp(MaterialApp(
