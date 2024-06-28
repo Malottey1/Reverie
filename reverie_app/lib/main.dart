@@ -5,6 +5,9 @@ import 'screens/terms_and_conditions.dart';
 import 'screens/vendor_signup_screen.dart';
 import 'screens/vendor_store_screen.dart';
 import 'screens/add_product_screen.dart';
+import 'screens/login_screen.dart'; // Assuming you have this screen
+import 'screens/register_screen.dart'; // Assuming you have this screen
+import 'screens/home_screen.dart'; // Assuming you have this screen
 
 void main() {
   runApp(MyApp());
@@ -18,7 +21,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Color(0xFF69734E), // This will affect the active step color
+        primaryColor: const Color(0xFF69734E), // This will affect the active step color
         colorScheme: const ColorScheme.light(
           primary: Color(0xFF69734E), // Active step color
           secondary: Colors.grey, // Inactive step color
@@ -41,6 +44,9 @@ class MyApp extends StatelessWidget {
         '/vendor-signup': (context) => VendorSignupScreen(),
         '/vendor-store': (context) => VendorStoreScreen(),
         '/add-product': (context) => AddProductScreen(),
+        '/login': (context) => LoginScreen(), // Add this route
+        '/register': (context) => RegisterScreen(), // Add this route
+        '/home': (context) => HomeScreen(), // Add this route
       },
     );
   }
