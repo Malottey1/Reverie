@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/user_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/terms_and_conditions.dart';
 import 'screens/vendor_signup_screen.dart';
 import 'screens/vendor_store_screen.dart';
 import 'screens/add_product_screen.dart';
-import 'screens/login_screen.dart'; // Assuming you have this screen
-import 'screens/register_screen.dart'; // Assuming you have this screen
-import 'screens/home_screen.dart'; // Assuming you have this screen
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/home_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -44,9 +53,9 @@ class MyApp extends StatelessWidget {
         '/vendor-signup': (context) => VendorSignupScreen(),
         '/vendor-store': (context) => VendorStoreScreen(),
         '/add-product': (context) => AddProductScreen(),
-        '/login': (context) => LoginScreen(), // Add this route
-        '/register': (context) => RegisterScreen(), // Add this route
-        '/home': (context) => HomeScreen(), // Add this route
+        '/login': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(),
+        '/home': (context) => HomeScreen(),
       },
     );
   }
