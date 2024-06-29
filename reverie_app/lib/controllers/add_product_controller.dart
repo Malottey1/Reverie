@@ -1,8 +1,7 @@
-import 'dart:convert';
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
 import '../services/product_service.dart';
 import '../providers/user_provider.dart';
 import 'package:provider/provider.dart';

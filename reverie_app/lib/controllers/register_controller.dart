@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../models/user.dart';
 import '/services/api_connection.dart'; // Assuming the path to ApiConnection class
 import 'package:art_sweetalert/art_sweetalert.dart';
