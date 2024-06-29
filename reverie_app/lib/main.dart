@@ -10,12 +10,14 @@ import 'screens/add_product_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
+import 'controllers/add_product_controller.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => AddProductController()),
       ],
       child: MyApp(),
     ),
