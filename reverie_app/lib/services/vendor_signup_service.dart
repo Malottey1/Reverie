@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class VendorSignupService {
-  final String host = "http://192.168.100.61/api/reverie/";
+  final String host = "http://192.168.100.195/api/reverie/";
 
   Future<Map<String, dynamic>> registerVendor(Map<String, dynamic> vendorData) async {
     final response = await http.post(

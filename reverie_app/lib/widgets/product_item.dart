@@ -10,7 +10,7 @@ class ProductItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
+      width: 180,
       margin: EdgeInsets.only(right: 10),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.withOpacity(0.5)),

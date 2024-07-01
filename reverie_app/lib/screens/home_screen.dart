@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
         MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
       );
-    }  else if (index == 4) {  
+    } else if (index == 4) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => SettingsScreen()),
@@ -162,60 +162,35 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 5),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                    );
-                  }),
-                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                    );
-                  }),
-                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                    );
-                  }),
-                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                    );
-                  }),
-                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                    );
-                  }),
-                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                    );
-                  }),
-                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                    );
-                  }),
-                  ProductItem(imagePath: imagePath, title: title, onBuyNow: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                    );
-                  }),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: ProductItem(
+                    imagePath: imagePath,
+                    title: title,
+                    onBuyNow: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: ProductItem(
+                    imagePath: imagePath,
+                    title: title,
+                    onBuyNow: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 20),
             Text(
