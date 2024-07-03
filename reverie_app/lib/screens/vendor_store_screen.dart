@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'add_product_screen.dart';
 import 'vendor_dashboard_screen.dart';
 import 'inventory_management_screen.dart'; // Import the inventory management screen
 import 'vendor_edit_profile_screen.dart';
+import '../providers/user_provider.dart'; // Import UserProvider
+import '../screens/home_screen.dart'; // Import HomeScreen
 
 class VendorStoreScreen extends StatelessWidget {
   @override
@@ -80,28 +83,28 @@ class VendorStoreScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF69734E),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF69734E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => VendorEditProfileScreen()),
-                      );
-                    },
-                    child: Text(
-                      'Edit Profile',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        color: Colors.white,
-                        fontSize: 16,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => VendorEditProfileScreen()),
+                        );
+                      },
+                      child: Text(
+                        'Edit Profile',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
-                  ),
                   ],
                 ),
               ),
@@ -151,7 +154,7 @@ class VendorStoreScreen extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/orders');
               break;
             case 4:
-              Navigator.pushReplacementNamed(context, '/me');
+              _showSignOutDialog(context);
               break;
           }
         },
@@ -174,10 +177,40 @@ class VendorStoreScreen extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Me',
+            label: 'Sign Out',
           ),
         ],
       ),
+    );
+  }
+
+  void _showSignOutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Sign Out'),
+          content: Text('Are you sure you want to sign out?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Sign Out'),
+              onPressed: () {
+                Provider.of<UserProvider>(context, listen: false).signOut();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -249,23 +282,22 @@ class VendorStoreScreen extends StatelessWidget {
     );
   }
 
-  
-Widget _buildProductItem(BuildContext context, String title, String price, String oldPrice, bool isOnSale) {
-  return Container(
-    decoration: BoxDecoration(
-      color: Color(0xFFDDDBD3), // Background color as specified
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(10),
-                topRight: Radius.circular(10),
-              ),
+  Widget _buildProductItem(BuildContext context, String title, String price, String oldPrice, bool isOnSale) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFFDDDBD3), // Background color as specified
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(10),
+                  topRight: Radius.circular(10),
+                             ),
               child: Image.asset(
                 'assets/men.png',
                 width: double.infinity,
