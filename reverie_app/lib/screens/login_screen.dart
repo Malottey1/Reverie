@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 162, vertical: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 140, vertical: 10),
                   ),
                   onPressed: () {
                     _controller.login(context);

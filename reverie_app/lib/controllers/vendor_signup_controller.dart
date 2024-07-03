@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../services/vendor_signup_service.dart';
 import '../providers/user_provider.dart';
+import 'package:http/http.dart' as http;
 
 class VendorSignupController {
   final TextEditingController profilePhotoController = TextEditingController();
@@ -35,7 +37,7 @@ class VendorSignupController {
 
     if (pickedFile != null) {
       final appDir = await getApplicationDocumentsDirectory();
-      final folderPath = path.join(appDir.path, 'vendor_profile_photos');
+      final folderPath = path.join(appDir.path, 'profile-photos');
       await Directory(folderPath).create(recursive: true);
       final fileName = path.basename(pickedFile.path);
       final savedImage = await File(pickedFile.path).copy(path.join(folderPath, fileName));
@@ -49,13 +51,12 @@ class VendorSignupController {
     final int? userId = userProvider.userId;
 
     if (userId == null) {
-      print('User ID not found in user provider');
       _showErrorDialog(context, 'User ID not found. Please log in again.');
       return;
     }
 
-    final Map<String, dynamic> vendorData = {
-      'user_id': userId,
+    final Map<String, String?> vendorData = {
+      'user_id': userId.toString(),
       'profile_photo': profilePhotoController.text,
       'business_description': businessDescriptionController.text,
       'business_name': businessNameController.text,
@@ -81,42 +82,66 @@ class VendorSignupController {
       'routing_number': selectedPaymentMethod == 2 ? routingNumberController.text : null,
     };
 
-    if (!_validateInputs(vendorData)) {
+    if (!_validateInputs(vendorData, selectedPaymentMethod)) {
       _showErrorDialog(context, 'Please fill in all required fields.');
       return;
     }
 
-    print('Sending vendor registration data: $vendorData'); // Log the data being sent
-
     try {
-      final response = await _service.registerVendor(vendorData);
-      print('Response: $response'); // Log the response
+      final request = http.MultipartRequest('POST', Uri.parse('http://192.168.100.195/api/reverie/register_vendor.php'));
+      vendorData.forEach((key, value) {
+        if (value != null) {
+          request.fields[key] = value;
+        }
+      });
 
-      if (response['message'] == 'Registration successful') {
-        print('Registration successful');
-        Navigator.pushReplacementNamed(context, '/vendor-store');
+      if (profilePhotoController.text.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath('profile_photo', profilePhotoController.text));
+      }
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(responseBody);
+        if (responseData['message'] == 'Registration successful') {
+          userProvider.setVendorId(responseData['vendor_id']);
+          Navigator.pushReplacementNamed(context, '/vendor-store');
+        } else {
+          _showErrorDialog(context, 'Registration failed: ${responseData['message']}');
+        }
       } else {
-        print('Registration failed: ${response['message']}');
-        _showErrorDialog(context, 'Registration failed: ${response['message']}');
+        _showErrorDialog(context, 'Server error: ${response.reasonPhrase}');
       }
     } catch (e) {
-      print('Registration failed: $e');
       _showErrorDialog(context, 'Registration failed: $e');
     }
   }
 
-  bool _validateInputs(Map<String, dynamic> data) {
-    // Add validation logic as needed
-    if (data['profile_photo'] == null || data['profile_photo'].isEmpty) return false;
-    if (data['business_description'] == null || data['business_description'].isEmpty) return false;
-    if (data['business_name'] == null || data['business_name'].isEmpty) return false;
-    if (data['business_registration_number'] == null || data['business_registration_number'].isEmpty) return false;
-    if (data['business_address'] == null || data['business_address'].isEmpty) return false;
-    if (data['city'] == null || data['city'].isEmpty) return false;
-    if (data['state'] == null || data['state'].isEmpty) return false;
-    if (data['country'] == null || data['country'].isEmpty) return false;
+  bool _validateInputs(Map<String, String?> data, int selectedPaymentMethod) {
+    if (data['profile_photo'] == null || data['profile_photo']!.isEmpty) return false;
+    if (data['business_description'] == null || data['business_description']!.isEmpty) return false;
+    if (data['business_name'] == null || data['business_name']!.isEmpty) return false;
+    if (data['business_registration_number'] == null || data['business_registration_number']!.isEmpty) return false;
+    if (data['business_address'] == null || data['business_address']!.isEmpty) return false;
+    if (data['city'] == null || data['city']!.isEmpty) return false;
+    if (data['state'] == null || data['state']!.isEmpty) return false;
+    if (data['country'] == null || data['country']!.isEmpty) return false;
 
-    // Add more validation if necessary for payment details based on selectedPaymentMethod
+    if (selectedPaymentMethod == 0) { // Credit Card
+      if (data['card_name'] == null || data['card_name']!.isEmpty) return false;
+      if (data['card_number'] == null || data['card_number']!.isEmpty) return false;
+      if (data['card_expiry_date'] == null || data['card_expiry_date']!.isEmpty) return false;
+      if (data['card_cvv'] == null || data['card_cvv']!.isEmpty) return false;
+    } else if (selectedPaymentMethod == 1) { // Mobile Money
+      if (data['mobile_network'] == null || data['mobile_network']!.isEmpty) return false;
+      if (data['phone_number'] == null || data['phone_number']!.isEmpty) return false;
+    } else if (selectedPaymentMethod == 2) { // Bank Account
+      if (data['account_holder_name'] == null || data['account_holder_name']!.isEmpty) return false;
+      if (data['bank_name'] == null || data['bank_name']!.isEmpty) return false;
+      if (data['account_number'] == null || data['account_number']!.isEmpty) return false;
+      if (data['routing_number'] == null || data['routing_number']!.isEmpty) return false;
+    }
 
     return true;
   }

@@ -175,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 150, vertical: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 130, vertical: 10),
                     ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {

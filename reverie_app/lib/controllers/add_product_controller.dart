@@ -1,4 +1,4 @@
-
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -6,6 +6,8 @@ import '../services/product_service.dart';
 import '../providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:art_sweetalert/art_sweetalert.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
 
 class AddProductController with ChangeNotifier {
   final TextEditingController titleController = TextEditingController();
@@ -130,9 +132,6 @@ class AddProductController with ChangeNotifier {
       return;
     }
 
-    final directory = await getApplicationDocumentsDirectory();
-    final File localImage = await File(imagePath!).copy('${directory.path}/${DateTime.now().millisecondsSinceEpoch}.jpg');
-
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final int? userId = userProvider.userId;
 
@@ -141,29 +140,51 @@ class AddProductController with ChangeNotifier {
       return;
     }
 
-    final Map<String, dynamic> productData = {
-      'user_id': userId,
-      'title': titleController.text,
-      'description': descriptionController.text,
-      'category_id': categoryId,
-      'brand': brandController.text,
-      'size_id': sizeId,
-      'color': colorController.text,
-      'condition_id': conditionId,
-      'target_group_id': targetGroupId,
-      'price': priceController.text,
-      'image_path': localImage.path,
-    };
-
     try {
-      final response = await _productService.addProduct(productData);
-      if (response['message'] == 'Product added successfully') {
-        _showSuccessDialog(context);
+      print('Getting application documents directory...');
+      final directory = await getApplicationDocumentsDirectory();
+      print('Application documents directory: ${directory.path}');
+      
+      final String fileName = path.basename(imagePath!);
+      final String fullPath = path.join(directory.path, fileName);
+      print('Copying image to: $fullPath');
+      final File localImage = await File(imagePath!).copy(fullPath);
+
+      final request = http.MultipartRequest('POST', Uri.parse('http://192.168.100.195/api/reverie/add_product.php'));
+      request.fields['user_id'] = userId.toString();
+      request.fields['title'] = titleController.text;
+      request.fields['description'] = descriptionController.text;
+      request.fields['category_id'] = categoryId.toString();
+      request.fields['brand'] = brandController.text;
+      request.fields['size_id'] = sizeId.toString();
+      request.fields['color'] = colorController.text;
+      request.fields['condition_id'] = conditionId.toString();
+      request.fields['target_group_id'] = targetGroupId.toString();
+      request.fields['price'] = priceController.text;
+
+      print('Adding image to multipart request...');
+      request.files.add(await http.MultipartFile.fromPath('image', localImage.path));
+
+      print('Sending request...');
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+
+      print('Response status code: ${response.statusCode}');
+      print('Response body: $responseBody');
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(responseBody);
+        if (responseData['message'] == 'Product added successfully') {
+          _showSuccessDialog(context);
+        } else {
+          _showErrorDialog(context, 'Failed to add product: ${responseData['error']}');
+        }
       } else {
-        _showErrorDialog(context, 'Failed to add product: ${response['error']}');
+        _showErrorDialog(context, 'Server error: ${response.reasonPhrase}');
       }
     } catch (e) {
       _showErrorDialog(context, 'Server error: ${e.toString()}');
+      print('Error: ${e.toString()}');
     }
   }
 

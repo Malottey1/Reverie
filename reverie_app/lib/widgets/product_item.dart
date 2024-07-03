@@ -25,11 +25,14 @@ class ProductItem extends StatelessWidget {
               topLeft: Radius.circular(8.0),
               topRight: Radius.circular(8.0),
             ),
-            child: Image.asset(
+            child: Image.network(
               imagePath,
               fit: BoxFit.cover,
               width: double.infinity,
               height: 200,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(Icons.error);
+              },
             ),
           ),
           Padding(

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:reverie_app/screens/order_history_screen.dart';
 import '../widgets/category_item.dart';
 import '../widgets/product_item.dart';
-import 'terms_and_conditions.dart';  // Import the Terms and Conditions screen
-import 'search_screen.dart'; // Import the Search Screen
-import 'product_details_screen.dart'; // Import the Product Details Screen
+import 'terms_and_conditions.dart';
+import 'search_screen.dart';
+import 'product_details_screen.dart';
 import 'cart_screen.dart';
 import 'store_list_screen.dart';
 import 'settings_screen.dart';
+import 'vendor_store_screen.dart'; // Import VendorStoreScreen
+import 'package:reverie_app/services/api_connection.dart';
+import '../providers/user_provider.dart'; // Import UserProvider
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -16,19 +20,34 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  late Future<List<dynamic>> _productsFuture;
+  final ApiConnection _apiConnection = ApiConnection();
 
-  void _onItemTapped(int index) {
-    if (index == 1) {  // Index for the Market button
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = _apiConnection.fetchProducts();
+  }
+ void _onItemTapped(int index) {
+    if (index == 1) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => StoreListScreen()),
       );
-    } else if (index == 2) {  // Index for the Sell button
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => TermsConditionsScreen()),
-      );
-    } else if (index == 3) {  // Index for the Sell button
+    } else if (index == 2) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      if (userProvider.isVendor) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => VendorStoreScreen()),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TermsConditionsScreen()),
+        );
+      }
+    } else if (index == 3) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
@@ -68,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) => SearchScreen(),
                   transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    const begin = Offset(-1.0, 0.0);  // Slide from the left
+                    const begin = Offset(-1.0, 0.0);
                     const end = Offset.zero;
                     const curve = Curves.ease;
 
@@ -104,21 +123,35 @@ class _HomeScreenState extends State<HomeScreen> {
               Tab(text: 'Women'),
               Tab(text: 'Men'),
               Tab(text: 'Kids'),
-              Tab(text: 'Shoes'),
-              Tab(text: 'Bags'),
-              Tab(text: 'Watches'),
+              Tab(text: 'Tops'),
+              Tab(text: 'Bottoms'),
+              Tab(text: 'Dresses'),
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            buildTabContent('assets/women.png', 'New In: Women’s'),
-            buildTabContent('assets/men.png', 'New In: Men’s'),
-            buildTabContent('assets/kids.png', 'New In: Kids'),
-            buildTabContent('assets/shoes.png', 'New In: Shoes'),
-            buildTabContent('assets/bags.png', 'New In: Bags'),
-            buildTabContent('assets/watches.png', 'New In: Watches'),
-          ],
+        body: FutureBuilder<List<dynamic>>(
+          future: _productsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No products available'));
+            } else {
+              final products = snapshot.data!;
+              return TabBarView(
+                children: [
+                  buildTabContent(products, 'Women', null),
+                  buildTabContent(products, 'Men', null),
+                  buildTabContent(products, 'Kids', null),
+                  buildTabContent(products, null, 'Tops'),
+                  buildTabContent(products, null, 'Bottoms'),
+                  buildTabContent(products, null, 'Dresses'),
+                ],
+              );
+            }
+          },
         ),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Colors.white,
@@ -154,10 +187,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildTabContent(String imagePath, String title) {
+  Widget buildTabContent(List<dynamic> products, String? targetGroup, String? category) {
+    final filteredProducts = products.where((product) {
+      final matchesTargetGroup = targetGroup == null || product['target_group_name'] == targetGroup;
+      final matchesCategory = category == null || product['category_name'] == category;
+      return matchesTargetGroup && matchesCategory;
+    }).toList();
+
+    if (filteredProducts.isEmpty) {
+      return Center(child: Text('No products available'));
+    }
+
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(15.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -165,38 +208,40 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: ProductItem(
-                    imagePath: imagePath,
-                    title: title,
-                    onBuyNow: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                      );
-                    },
+                if (filteredProducts.isNotEmpty)
+                  Expanded(
+                    child: ProductItem(
+                      imagePath: filteredProducts[0]['image_url'] ?? '',
+                      title: filteredProducts[0]['title'] ?? 'No Title',
+                      onBuyNow: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ProductDetailsScreen(product: filteredProducts[0])),
+                        );
+                      },
+                    ),
                   ),
-                ),
                 SizedBox(width: 10),
-                Expanded(
-                  child: ProductItem(
-                    imagePath: imagePath,
-                    title: title,
-                    onBuyNow: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-                      );
-                    },
+                if (filteredProducts.length > 1)
+                  Expanded(
+                    child: ProductItem(
+                      imagePath: filteredProducts[1]['image_url'] ?? '',
+                      title: filteredProducts[1]['title'] ?? 'No Title',
+                      onBuyNow: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ProductDetailsScreen(product: filteredProducts[1])),
+                        );
+                      },
+                    ),
                   ),
-                ),
               ],
             ),
             SizedBox(height: 20),
             Text(
               'Top Categories',
               style: TextStyle(
-                fontSize: 18,
+                               fontSize: 18,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Poppins',
                 color: Colors.black,
@@ -206,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CategoryItem(title: 'Sneakers', imagePath: 'assets/sneakers.png'),
+                CategoryItem(title: 'Watches', imagePath: 'assets/sneakers.png'),
                 CategoryItem(title: 'Handbags', imagePath: 'assets/handbags.png'),
               ],
             ),

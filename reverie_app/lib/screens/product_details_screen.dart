@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
+  final Map<String, dynamic> product;
+
+  ProductDetailsScreen({required this.product});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,9 +50,12 @@ class ProductDetailsScreen extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Image.network(
-          'https://via.placeholder.com/400x250',
+          product['image_url'],
           width: double.infinity,
           fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(Icons.error);
+          },
         ),
       ),
     );
@@ -61,7 +68,7 @@ class ProductDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Everlane Twisted detail long sleeve dress',
+            product['title'],
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 18,
@@ -70,7 +77,7 @@ class ProductDetailsScreen extends StatelessWidget {
             ),
           ),
           Text(
-            '\$276',
+            '\$${product['price']}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,
@@ -89,7 +96,7 @@ class ProductDetailsScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text(
-            'Size: M',
+            'Size: ${product['size_name']}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 20,
@@ -105,10 +112,10 @@ class ProductDetailsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildExpandableSection('The Details', 'Green stretch design with twist detailing and round neck. Long sleeves design with mid-length dress and straight hem.'),
-        _buildExpandableSection('Size & Fit', 'Details about size and fit.'),
-        _buildExpandableSection('Composition & Care', 'Details about composition and care.'),
-        _buildExpandableSection('Delivery & Return', 'Details about delivery and return.'),
+        _buildExpandableSection('The Details', product['description']),
+        _buildExpandableSection('Size & Fit', product['size_name']),
+        _buildExpandableSection('Brand', product['brand'] ?? 'No Brand'),
+        _buildExpandableSection('Condition', product['condition_name']),
       ],
     );
   }
@@ -135,7 +142,9 @@ class ProductDetailsScreen extends StatelessWidget {
       ],
     );
   }
+
   Widget _buildRecommendedProducts() {
+    // This is a placeholder for recommended products
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -196,6 +205,7 @@ class ProductDetailsScreen extends StatelessWidget {
       ],
     );
   }
+
   Widget _buildActionButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -232,10 +242,6 @@ class ProductDetailsScreen extends StatelessWidget {
             ),
             onPressed: () {
               // Handle buy now action
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProductDetailsScreen()),
-              );
             },
             child: Text(
               'Buy Now',
