@@ -12,6 +12,7 @@ import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'controllers/add_product_controller.dart';
 import 'providers/vendor_provider.dart';
+import 'providers/cart_provider.dart';
 
 void main() {
   runApp(
@@ -20,6 +21,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => AddProductController()),
         ChangeNotifierProvider(create: (_) => VendorProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: MyApp(),
     ),

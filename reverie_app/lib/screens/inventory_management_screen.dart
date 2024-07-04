@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/api_connection.dart';
+import '../providers/user_provider.dart';
 
 class InventoryManagementScreen extends StatefulWidget {
   @override
@@ -6,6 +9,68 @@ class InventoryManagementScreen extends StatefulWidget {
 }
 
 class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
+  List<Map<String, dynamic>> _products = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProducts();
+  }
+
+  Future<void> _fetchProducts() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final vendorId = userProvider.vendorId;
+
+    try {
+      List<dynamic> results = await ApiConnection().fetchProductsByVendor(vendorId!);
+      setState(() {
+        _products = results.cast<Map<String, dynamic>>();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load products: $e')),
+      );
+    }
+  }
+
+  Future<void> _updateProduct(int productId, String title, double price, bool isActive) async {
+    try {
+      await ApiConnection().updateProduct(
+        productId: productId,
+        title: title,
+        price: price,
+        isActive: isActive ? 1 : 0,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Product updated successfully')),
+      );
+      _fetchProducts();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update product: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteProduct(int productId) async {
+    try {
+      await ApiConnection().deleteProduct(productId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Product deleted successfully')),
+      );
+      _fetchProducts();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete product: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,42 +102,19 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
               ),
             ),
             SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                FilterChip(
-                  label: Text('All'),
-                  onSelected: (bool value) {},
-                  backgroundColor: Color(0xFFDDDBD3),
-                ),
-                FilterChip(
-                  label: Text('Category'),
-                  onSelected: (bool value) {},
-                  backgroundColor: Color(0xFFDDDBD3),
-                ),
-                FilterChip(
-                  label: Text('Size'),
-                  onSelected: (bool value) {},
-                  backgroundColor: Color(0xFFDDDBD3),
-                ),
-                FilterChip(
-                  label: Text('Color'),
-                  onSelected: (bool value) {},
-                  backgroundColor: Color(0xFFDDDBD3),
-                ),
-              ],
-            ),
+            _buildFilterChips(),
             SizedBox(height: 20),
             Expanded(
-              child: ListView(
-                children: [
-                  _buildInventoryItem('Nike Air Max 90 Hyper Grape', 'assets/shoes.png', '\$150'),
-                  _buildInventoryItem('Adidas Yeezy Boost 350 V2', 'assets/shoes.png', '\$250'),
-                  _buildInventoryItem('Gucci GG Marmont Matelasse Mini', 'assets/dress.jpg', '\$1300'),
-                  _buildInventoryItem('Coach Signature Zip Tote', 'assets/bags.png', '\$200'),
-                  _buildInventoryItem('Prada Saffiano Leather Wallet', 'assets/jacket.jpg', '\$300'),
-                ],
-              ),
+              child: _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : _products.isEmpty
+                      ? Center(child: Text('No products found'))
+                      : ListView.builder(
+                          itemCount: _products.length,
+                          itemBuilder: (context, index) {
+                            return _buildInventoryItem(_products[index]);
+                          },
+                        ),
             ),
           ],
         ),
@@ -80,7 +122,40 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
     );
   }
 
-  Widget _buildInventoryItem(String title, String imageUrl, String price) {
+  Widget _buildFilterChips() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        FilterChip(
+          label: Text('All'),
+          onSelected: (bool value) {},
+          backgroundColor: Color(0xFFDDDBD3),
+        ),
+        FilterChip(
+          label: Text('Category'),
+          onSelected: (bool value) {},
+          backgroundColor: Color(0xFFDDDBD3),
+        ),
+        FilterChip(
+          label: Text('Size'),
+          onSelected: (bool value) {},
+          backgroundColor: Color(0xFFDDDBD3),
+        ),
+        FilterChip(
+          label: Text('Color'),
+          onSelected: (bool value) {},
+          backgroundColor: Color(0xFFDDDBD3),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInventoryItem(Map<String, dynamic> product) {
+    String imageUrl = product['image_path'];
+    if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
+      imageUrl = 'http://yourserver.com/api/reverie/' + imageUrl;
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: const EdgeInsets.all(16.0),
@@ -96,11 +171,21 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
+            child: Image.network(
               imageUrl,
               width: 60,
               height: 60,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 60,
+                  height: 60,
+                  color: Colors.grey,
+                  child: Center(
+                    child: Icon(Icons.image, color: Colors.white),
+                  ),
+                );
+              },
             ),
           ),
           SizedBox(width: 16),
@@ -109,12 +194,12 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  product['title'],
                   style: TextStyle(fontFamily: 'Poppins', fontSize: 16, color: Colors.black),
                   softWrap: true,
                 ),
                 Text(
-                  price,
+                  '\$${product['price']}',
                   style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Colors.black54),
                   softWrap: true,
                 ),
@@ -131,7 +216,7 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
               padding: EdgeInsets.symmetric(horizontal: 12),
             ),
             onPressed: () {
-              _showEditItemDialog(context, title, imageUrl, price);
+              _showEditItemDialog(context, product);
             },
             child: Text(
               'Edit',
@@ -143,22 +228,30 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
     );
   }
 
-  void _showEditItemDialog(BuildContext context, String title, String imageUrl, String price) {
-    showDialog(
+  Future<bool?> _showEditItemDialog(BuildContext context, Map<String, dynamic> product) {
+    return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
-        return EditItemDialog(title: title, imageUrl: imageUrl, price: price);
+        return EditItemDialog(
+          product: product,
+          onSave: (title, price, isActive) {
+            _updateProduct(product['product_id'], title, price, isActive);
+          },
+          onDelete: () {
+            _deleteProduct(product['product_id']);
+          },
+        );
       },
     );
   }
 }
 
 class EditItemDialog extends StatefulWidget {
-  final String title;
-  final String imageUrl;
-  final String price;
+  final Map<String, dynamic> product;
+  final void Function(String title, double price, bool isActive) onSave;
+  final VoidCallback onDelete;
 
-  EditItemDialog({required this.title, required this.imageUrl, required this.price});
+  EditItemDialog({required this.product, required this.onSave, required this.onDelete});
 
   @override
   _EditItemDialogState createState() => _EditItemDialogState();
@@ -172,8 +265,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.title);
-    _priceController = TextEditingController(text: widget.price);
+    _titleController = TextEditingController(text: widget.product['title']);
+    _priceController = TextEditingController(text: widget.product['price'].toString());
+    _isActive = widget.product['is_active'] == 1;
   }
 
   @override
@@ -195,7 +289,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
+                        TextField(
               controller: _titleController,
               decoration: InputDecoration(
                 labelText: 'Title',
@@ -238,7 +332,8 @@ class _EditItemDialogState extends State<EditItemDialog> {
                 padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
               ),
               onPressed: () {
-                // Handle delete action
+                widget.onDelete();
+                Navigator.of(context).pop();
               },
               child: Text('Delete', style: TextStyle(fontFamily: 'Poppins', color: Colors.white)),
             ),
@@ -252,7 +347,12 @@ class _EditItemDialogState extends State<EditItemDialog> {
                 padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
               ),
               onPressed: () {
-                // Handle save changes action
+                widget.onSave(
+                  _titleController.text,
+                  double.tryParse(_priceController.text) ?? 0.0,
+                  _isActive,
+                );
+                Navigator.of(context).pop();
               },
               child: Text('Save Changes', style: TextStyle(fontFamily: 'Poppins', color: Colors.white)),
             ),
@@ -262,7 +362,3 @@ class _EditItemDialogState extends State<EditItemDialog> {
     );
   }
 }
-
-void main() => runApp(MaterialApp(
-  home: InventoryManagementScreen(),
-));

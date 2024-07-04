@@ -1,13 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:reverie_app/screens/home_screen.dart';
 import 'add_product_screen.dart';
 import 'vendor_dashboard_screen.dart';
 import 'inventory_management_screen.dart'; // Import the inventory management screen
 import 'vendor_edit_profile_screen.dart';
 import '../providers/user_provider.dart'; // Import UserProvider
-import '../screens/home_screen.dart'; // Import HomeScreen
+import '../services/api_connection.dart'; // Import ApiConnection
 
-class VendorStoreScreen extends StatelessWidget {
+class VendorStoreScreen extends StatefulWidget {
+  @override
+  _VendorStoreScreenState createState() => _VendorStoreScreenState();
+}
+
+class _VendorStoreScreenState extends State<VendorStoreScreen> {
+  List<Map<String, dynamic>> _products = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProducts();
+  }
+
+  Future<void> _fetchProducts() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final vendorId = userProvider.vendorId;
+
+    try {
+      List<dynamic> results = await ApiConnection().fetchProductsByVendor(vendorId!);
+      setState(() {
+        _products = results.cast<Map<String, dynamic>>();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load products: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,96 +73,98 @@ class VendorStoreScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Center(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.grey,
-                      child: CircleAvatar(
-                        radius: 38,
-                        backgroundColor: Colors.white,
-                        child: Text(
-                          'Bershka',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Bershka',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    Text(
-                      'Verified official store',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF69734E),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => VendorEditProfileScreen()),
-                        );
-                      },
-                      child: Text(
-                        'Edit Profile',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTabButton(context, 'Overview'),
-                  _buildTabButton(context, 'Collection'),
-                  _buildTabButton(context, 'Blog'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Center(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.grey,
+                            child: CircleAvatar(
+                              radius: 38,
+                              backgroundColor: Colors.white,
+                              child: Text(
+                                'Bershka',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            'Bershka',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                            'Verified official store',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF69734E),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => VendorEditProfileScreen()),
+                              );
+                            },
+                            child: Text(
+                              'Edit Profile',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildTabButton(context, 'Overview'),
+                        _buildTabButton(context, 'Collection'),
+                        _buildTabButton(context, 'Blog'),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  _buildSectionHeader(context, 'Peak of our new collection'),
+                  SizedBox(height: 10),
+                  _buildProductGrid(context),
+                  SizedBox(height: 10),
                 ],
               ),
             ),
-            SizedBox(height: 10),
-            _buildSectionHeader(context, 'Peak of our new collection'),
-            SizedBox(height: 10),
-            _buildProductGrid(context),
-            SizedBox(height: 10),
-          ],
-        ),
-      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Color(0xFFDDDBD3),
         selectedItemColor: Color(0xFF69734E),
@@ -262,7 +299,7 @@ class VendorStoreScreen extends StatelessWidget {
       child: GridView.builder(
         physics: NeverScrollableScrollPhysics(),
         shrinkWrap: true,
-        itemCount: 4,
+        itemCount: _products.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 16.0,
@@ -270,26 +307,28 @@ class VendorStoreScreen extends StatelessWidget {
           childAspectRatio: 0.7,
         ),
         itemBuilder: (BuildContext context, int index) {
+          final product = _products[index];
           return _buildProductItem(
             context,
-            'Bershka Platform Sandals with Buckle',
-            '\$29',
-            index % 2 == 0 ? '\$49' : '',
-            index % 2 == 0,
+            product['title'],
+            '\$${product['price']}',
+            product['old_price'] != null ? '\$${product['old_price']}' : '',
+            product['is_on_sale'] == 1,
+            product['image_path'],
           );
         },
       ),
     );
   }
 
-  Widget _buildProductItem(BuildContext context, String title, String price, String oldPrice, bool isOnSale) {
+  Widget _buildProductItem(BuildContext context, String title, String price, String oldPrice, bool isOnSale, String imagePath) {
     return Container(
       decoration: BoxDecoration(
         color: Color(0xFFDDDBD3), // Background color as specified
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Stack(
             children: [
@@ -297,75 +336,85 @@ class VendorStoreScreen extends StatelessWidget {
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(10),
                   topRight: Radius.circular(10),
-                             ),
-              child: Image.asset(
-                'assets/men.png',
-                width: double.infinity,
-                height: 172,
-                fit: BoxFit.cover,
+                ),
+                child: Image.network(
+                  'http://192.168.162.65/api/reverie/' + imagePath,
+                  width: double.infinity,
+                  height: 172,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: double.infinity,
+                      height: 172,
+                      color: Colors.grey,
+                      child: Center(
+                        child: Icon(Icons.image, color: Colors.white),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            if (isOnSale)
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  color: Colors.red,
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Text(
-                    '-72%', // Discount percentage placeholder
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      color: Colors.white,
-                      fontSize: 12,
+              if (isOnSale)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    color: Colors.red,
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text(
+                      '-72%', // Discount percentage placeholder
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 12,
-              color: Colors.black,
-            ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 2,
+            ],
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text(
-            price,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              color: Color(0xFF69734E),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        if (isOnSale)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            padding: const EdgeInsets.all(8.0),
             child: Text(
-              oldPrice,
+              title,
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12,
-                color: Colors.grey,
-                decoration: TextDecoration.lineThrough,
+                color: Colors.black,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(
+              price,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                color: Color(0xFF69734E),
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-      ],
-    ),
-  );
-}
+          if (isOnSale)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                oldPrice,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  color: Colors.grey,
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 void main() => runApp(MaterialApp(
