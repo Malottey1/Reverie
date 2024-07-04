@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'enter_credit_card_info.dart';
-import 'enter_mobile_money_info.dart'; // Import the mobile money screen
+import 'enter_mobile_money_info.dart';
 
-class PaymentScreen extends StatelessWidget {
-  final String totalAmount;
+class PaymentSelectionScreen extends StatelessWidget {
+  final double totalAmount;
 
-  PaymentScreen({required this.totalAmount});
+  PaymentSelectionScreen({required this.totalAmount});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class PaymentScreen extends StatelessWidget {
           },
         ),
         title: Text(
-          'Select payment',
+          'Select Payment',
           style: TextStyle(
             fontFamily: 'Poppins',
             color: Colors.black,
@@ -57,17 +57,11 @@ class PaymentScreen extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => isMobileMoney
-                ? EnterMobileMoneyInfoScreen(totalAmount: totalAmount)
+                ? EnterMobileMoneyInfoScreen(totalAmount: totalAmount.toString())
                 : EnterCreditCardInfoScreen(),
           ),
         );
       },
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: PaymentScreen(totalAmount: '\$56.96'),
-  ));
 }

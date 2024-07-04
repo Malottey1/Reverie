@@ -1,12 +1,37 @@
 import 'package:flutter/material.dart';
-import 'my_information_screen.dart'; // Import your screen files accordingly
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'my_information_screen.dart';
 import 'billing_address_screen.dart';
 import 'shipping_address_screen.dart';
 import 'payment_selection_screen.dart';
-import 'order_details.dart';
+import 'cart_screen.dart';
 import 'order_confirmation_screen.dart';
+import '../models/checkout_info.dart';
+import '../models/cart_item.dart';
+import '../providers/user_provider.dart';
+import '../services/api_connection.dart';
 
-class CheckoutScreen extends StatelessWidget {
+class CheckoutScreen extends StatefulWidget {
+  @override
+  _CheckoutScreenState createState() => _CheckoutScreenState();
+}
+
+class _CheckoutScreenState extends State<CheckoutScreen> {
+  late Future<CheckoutInfo> _checkoutInfoFuture;
+  late Future<List<CartItem>> _cartItemsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final userId = Provider.of<UserProvider>(context, listen: false).userId;
+    if (userId != null) {
+      _checkoutInfoFuture = ApiConnection().fetchCheckoutInfo(userId);
+      _cartItemsFuture = ApiConnection().fetchCartItems(userId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,18 +49,72 @@ class CheckoutScreen extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInformationTile(context, 'My Information', 'Malcolm Clottey', 'clatteymolcolm4@gmail.com', MyInformationScreen()),
-            _buildInformationTile(context, 'Billing address', 'Malcolm Clottey', '9516 Fall Haven Rd\nFredericksburg Virginia\n22407-9264\nUSA', BillingAddressScreen()),
-            _buildInformationTile(context, 'Shipping', 'Malcolm Clottey', '+1 5714614899', ShippingAddressScreen()),
-            _buildPackageDetails(context),
-            _buildSummary(),
-            _buildPaymentTile(context),
-            _buildTotal(),
-            _buildCheckoutButton(context),
-          ],
+        child: FutureBuilder<CheckoutInfo>(
+          future: _checkoutInfoFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData) {
+              return Center(child: Text('No data available'));
+            } else {
+              final info = snapshot.data!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInformationTile(
+                    context,
+                    'My Information',
+                    '${info.firstName} ${info.lastName}',
+                    info.email,
+                    MyInformationScreen(),
+                  ),
+                  _buildInformationTile(
+                    context,
+                    'Billing Address',
+                    '${info.billingName}',
+                    '${info.billingAddress}\n${info.billingCity}\n${info.billingState}\n${info.billingCountry}',
+                    BillingAddressScreen(),
+                  ),
+                  _buildInformationTile(
+                    context,
+                    'Shipping',
+                    '${info.shippingFirstName} ${info.shippingLastName}',
+                    '${info.shippingAddress}\n${info.shippingCity}\n${info.shippingState}\n${info.shippingCountry}',
+                    ShippingAddressScreen(),
+                  ),
+                  FutureBuilder<List<CartItem>>(
+                    future: _cartItemsFuture,
+                    builder: (context, cartSnapshot) {
+                      if (cartSnapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      } else if (cartSnapshot.hasError) {
+                        return Center(child: Text('Error: ${cartSnapshot.error}'));
+                      } else if (!cartSnapshot.hasData || cartSnapshot.data!.isEmpty) {
+                        return Center(child: Text('Your cart is empty'));
+                      } else {
+                        final cartItems = cartSnapshot.data!;
+                        final double orderValue = cartItems.fold(0.0, (sum, item) => sum + item.price);
+                        final double deliveryFee = 5.99;
+                        final double estimatedTaxes = orderValue * 0.1;
+                        final double totalAmount = orderValue + deliveryFee + estimatedTaxes;
+                        return Column(
+                          children: [
+                            _buildPackageDetails(context, cartItems),
+                            _buildSummary(orderValue, deliveryFee, estimatedTaxes),
+                            _buildPaymentTile(context, totalAmount),
+                            _buildTotal(totalAmount),
+                            _buildCheckoutButton(context, totalAmount),
+                          ],
+                        );
+                      }
+                    },
+                  ),
+                ],
+              );
+            }
+          },
         ),
       ),
     );
@@ -61,7 +140,7 @@ class CheckoutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPackageDetails(BuildContext context) {
+  Widget _buildPackageDetails(BuildContext context, List<CartItem> cartItems) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
@@ -84,53 +163,13 @@ class CheckoutScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  'Order ID: 1234567890',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    color: Color(0xFF69734E),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    'https://via.placeholder.com/100x150',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    'https://via.placeholder.com/100x150',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    'https://via.placeholder.com/100x150',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
-                ),
                 IconButton(
                   icon: Icon(Icons.info_outline, color: Colors.black),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => OrderDetailsPage(),
+                        builder: (context) => CartScreen(),
                       ),
                     );
                   },
@@ -138,18 +177,55 @@ class CheckoutScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 10),
-            Text(
-              'Malcolm Clottey\n9516 Fall Haven Rd\nFredericksburg Virginia\n22407-9264\nUSA',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('\$5.99', style: TextStyle(fontFamily: 'Poppins')),
-                Text('Standard Delivery', style: TextStyle(fontFamily: 'Poppins')),
-              ],
+            Column(
+              children: cartItems.map((item) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          item.imageUrl,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '\$${item.price.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'Size: ${item.size}',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
           ],
         ),
@@ -157,7 +233,7 @@ class CheckoutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummary() {
+  Widget _buildSummary(double orderValue, double deliveryFee, double estimatedTaxes) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -173,7 +249,7 @@ class CheckoutScreen extends StatelessWidget {
               ),
             ),
             Text(
-              '\$24.99',
+              '\$${orderValue.toStringAsFixed(2)}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
@@ -191,7 +267,7 @@ class CheckoutScreen extends StatelessWidget {
               ),
             ),
             Text(
-              '\$5.99',
+              '\$${deliveryFee.toStringAsFixed(2)}',
               style: TextStyle(
                 fontFamily: 'Poppins',
               ),
@@ -208,7 +284,7 @@ class CheckoutScreen extends StatelessWidget {
               ),
             ),
             Text(
-              '\$1.64',
+              '\$${estimatedTaxes.toStringAsFixed(2)}',
               style: TextStyle(
                 fontFamily: 'Poppins',
               ),
@@ -220,7 +296,7 @@ class CheckoutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentTile(BuildContext context) {
+  Widget _buildPaymentTile(BuildContext context, double totalAmount) {
     return ListTile(
       title: Text(
         'Payment',
@@ -233,13 +309,13 @@ class CheckoutScreen extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => PaymentScreen(totalAmount: '\$32.62')),
+          MaterialPageRoute(builder: (context) => PaymentSelectionScreen(totalAmount: totalAmount)),
         );
       },
     );
   }
 
-  Widget _buildTotal() {
+  Widget _buildTotal(double totalAmount) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Row(
@@ -254,7 +330,7 @@ class CheckoutScreen extends StatelessWidget {
             ),
           ),
           Text(
-            '\$32.62',
+            '\$${totalAmount.toStringAsFixed(2)}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 18,
@@ -266,7 +342,7 @@ class CheckoutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCheckoutButton(BuildContext context) {
+  Widget _buildCheckoutButton(BuildContext context, double totalAmount) {
     return Center(
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -280,7 +356,7 @@ class CheckoutScreen extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OrderConfirmationScreen(totalAmount: '\$32.62'),
+              builder: (context) => OrderConfirmationScreen(totalAmount: totalAmount.toString()),
             ),
           );
         },
@@ -298,7 +374,12 @@ class CheckoutScreen extends StatelessWidget {
 }
 
 void main() {
-  runApp(MaterialApp(
-    home: CheckoutScreen(),
-  ));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserProvider(),
+      child: MaterialApp(
+        home: CheckoutScreen(),
+      ),
+    ),
+  );
 }
