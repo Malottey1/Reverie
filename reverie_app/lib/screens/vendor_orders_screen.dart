@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'vendor_order_details_screen.dart'; // Import the order details screen
-import 'vendor_pending_tracking_screen.dart'; // Import the pending tracking screen
-import 'vendor_orders_delivered.dart'; // Import the delivered orders screen
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import 'vendor_order_details_screen.dart';
+import 'vendor_pending_tracking_screen.dart';
+import 'vendor_orders_delivered.dart';
 
 class VendorOrdersScreen extends StatefulWidget {
   @override
@@ -15,6 +17,21 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> with SingleTick
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      if (userProvider.userId != null) {
+        try {
+          await userProvider.fetchUserInfo(userProvider.userId!);
+          await userProvider.checkIfVendor(userProvider.userId!);
+          if (userProvider.vendorId != null) {
+            await userProvider.fetchVendorOrders(userProvider.vendorId!);
+            await userProvider.fetchVendorDeliveredOrders(userProvider.vendorId!); // Fetch delivered orders
+          }
+        } catch (e) {
+          print('Error in initState: $e');
+        }
+      }
+    });
   }
 
   @override
@@ -25,6 +42,8 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+
     return Scaffold(
       backgroundColor: Color(0xFFDDDBD3),
       appBar: AppBar(
@@ -59,8 +78,8 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> with SingleTick
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildIncomingOrderList(),
-          _buildDeliveredOrderList(),
+          _buildOrderList(userProvider.incomingOrders, userProvider.pendingOrders, 'Pending Delivery Pickup', false),
+          _buildOrderList(userProvider.deliveredOrders, [], null, true),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -68,6 +87,10 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> with SingleTick
         selectedItemColor: Color(0xFF69734E),
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
+        currentIndex: 2,
+        onTap: (index) {
+          // Handle navigation
+        },
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -102,123 +125,49 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> with SingleTick
     );
   }
 
-  Widget _buildIncomingOrderList() {
-    List<Map<String, String>> incomingOrders = [
-      {
-        'title': 'Gucci loafers, size 7.5',
-        'orderId': '12345',
-        'status': 'Waiting For Pickup'
-      },
-      {
-        'title': 'Prada sunglasses',
-        'orderId': '12346',
-        'status': 'Waiting For Pickup'
-      },
-      {
-        'title': 'Chanel handbag',
-        'orderId': '12347',
-        'status': 'Waiting For Pickup'
-      },
-      {
-        'title': 'Rolex watch',
-        'orderId': '12348',
-        'status': 'Waiting For Pickup'
-      },
-    ];
-
-    List<Map<String, String>> pendingOrders = [
-      {
-        'title': 'Order number 12349',
-        'orderId': '12349',
-        'status': 'Waiting For Pickup'
-      },
-      {
-        'title': 'Order number 12350',
-        'orderId': '12350',
-        'status': 'Waiting For Pickup'
-      },
-      {
-        'title': 'Order number 12351',
-        'orderId': '12351',
-        'status': 'Waiting For Pickup'
-      },
-    ];
+  Widget _buildOrderList(List<Map<String, dynamic>> orders, List<Map<String, dynamic>> pendingOrders, String? pendingHeader, bool isDeliveredTab) {
+    if (orders.isEmpty && pendingOrders.isEmpty) {
+      return Center(
+        child: Text(
+          'No Orders Found',
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 18, color: Colors.black),
+        ),
+      );
+    }
 
     return ListView(
       padding: EdgeInsets.all(16.0),
       children: [
-        ...incomingOrders.map((order) => _buildOrderItem(order, false)).toList(),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(
-            'Pending Delivery Pickup',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+        ...orders.map((order) => _buildOrderItem(order, false, isDeliveredTab)).toList(),
+        if (pendingHeader != null && pendingOrders.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              pendingHeader,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
           ),
-        ),
-        ...pendingOrders.map((order) => _buildOrderItem(order, true)).toList(),
+          ...pendingOrders.map((order) => _buildOrderItem(order, true, isDeliveredTab)).toList(),
+        ],
       ],
     );
   }
 
-  Widget _buildDeliveredOrderList() {
-    List<Map<String, String>> orders = [
-      {
-        'title': 'Nike Running Shoes, Size 10',
-        'orderId': '12345',
-        'status': 'Delivered'
-      },
-      {
-        'title': 'Ray-Ban Aviator Sunglasses',
-        'orderId': '12346',
-        'status': 'Delivered'
-      },
-      {
-        'title': 'Lululemon Yoga Pants, Size 6',
-        'orderId': '12347',
-        'status': 'Delivered'
-      },
-      {
-        'title': 'Rolex watch',
-        'orderId': '12348',
-        'status': 'Delivered'
-      },
-      {
-        'title': 'Kindle Paperwhite E-reader',
-        'orderId': '12347',
-        'status': 'Delivered'
-      },
-      {
-        'title': 'Herman Miller Aeron Chair',
-        'orderId': '12347',
-        'status': 'Delivered'
-      },
-      {
-        'title': 'Canon EOS Camera',
-        'orderId': '12347',
-        'status': 'Delivered'
-      },
-    ];
+  Widget _buildOrderItem(Map<String, dynamic> order, bool isPending, bool isDeliveredTab) {
+    final String title = order['title'] ?? order['items']?.join(', ') ?? 'No Title'; // Ensure title is retrieved from the order map
+    final String orderId = order['order_id'].toString(); // Convert order_id to string
+    final String status = order['order_status'] ?? 'Unknown';
 
-    return ListView.builder(
-      padding: EdgeInsets.all(16.0),
-      itemCount: orders.length,
-      itemBuilder: (context, index) {
-        return _buildOrderItem(orders[index], false);
-      },
-    );
-  }
-
-  Widget _buildOrderItem(Map<String, String> order, bool isPending) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: Color(0xFFDDDBD3),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isPending ? Colors.transparent : Color(0xFF69734E),
@@ -235,7 +184,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> with SingleTick
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    order['title'] ?? 'No Title',
+                    title,
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 16,
@@ -243,25 +192,46 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> with SingleTick
                     ),
                     softWrap: true,
                   ),
-                  if (order['orderId']!.isNotEmpty)
-                    SizedBox(height: 4),
-                  if (order['orderId']!.isNotEmpty)
-                    Text(
-                      'Order ID: ${order['orderId']}',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
-                      softWrap: true,
+                  SizedBox(height: 4),
+                  Text(
+                    'Order ID: $orderId',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      color: Colors.black54,
                     ),
+                    softWrap: true,
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Status: $status',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      color: Colors.black54,
+                    ),
+                    softWrap: true,
+                  ),
                 ],
               ),
             ),
           ),
-          if (!isPending)
-            SizedBox(width: 8),
-          if (!isPending)
+          if (isDeliveredTab) ...[
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 4),
+                Text(
+                  'Delivered',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.green,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF69734E),
@@ -271,15 +241,27 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> with SingleTick
                 padding: EdgeInsets.symmetric(horizontal: 12),
               ),
               onPressed: () {
-                if (order['status'] == 'Delivered') {
+                if (isPending) {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => VendorOrdersDeliveredScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => VendorPendingTrackingScreen(
+                        orderId: orderId,
+                        items: title,
+                        pickupStatus: status,
+                        estimatedDeliveryDate: '1 Day 2 Hours', // Add appropriate value here
+                      ),
+                    ),
                   );
                 } else {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => VendorOrderDetailsScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => VendorOrderDetailsScreen(
+                        orderId: orderId,
+                        title: title,
+                      ),
+                    ),
                   );
                 }
               },
@@ -292,39 +274,9 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> with SingleTick
                 ),
               ),
             ),
-          if (isPending)
-            SizedBox(width: 8),
-          if (isPending)
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF69734E),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 12),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => VendorPendingTrackingScreen(
-                    orderId: order['orderId']!,
-                    items: order['title']!,
-                    pickupStatus: order['status']!,
-                    estimatedDeliveryDate: '1 Day 2 Hours', // Add appropriate value here
-                  )),
-                );
-              },
-              child: Text(
-                'View details',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  color: Colors.white,
-fontSize: 14,
-),
-),
-),
-],
-),
-);
-}
+          ],
+        ],
+      ),
+    );
+  }
 }

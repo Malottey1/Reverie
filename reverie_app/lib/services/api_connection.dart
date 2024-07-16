@@ -4,7 +4,7 @@ import '../models/cart_item.dart';
 import '../models/checkout_info.dart';
 
 class ApiConnection {
-  final String baseUrl = "http://192.168.162.65/api/reverie/";
+  final String baseUrl = "http://192.168.100.100/api/reverie/";
 
   Future<Map<String, dynamic>> registerUser(Map<String, dynamic> user) async {
     final String url = baseUrl + 'register.php';
@@ -139,22 +139,27 @@ class ApiConnection {
     }
   }
 
-  Future<CheckoutInfo> fetchCheckoutInfo(int userId) async {
+    Future<CheckoutInfo> fetchCheckoutInfo(int userId) async {
     final String url = '$baseUrl/checkout_info.php?user_id=$userId';
     try {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
+        print('Checkout Info Response: $jsonResponse');
         if (jsonResponse is Map<String, dynamic>) {
           return CheckoutInfo.fromJson(jsonResponse);
         } else {
+          print('Unexpected response format: $jsonResponse');
           throw Exception('Unexpected response format');
         }
       } else {
+        print('Failed to load checkout information. Status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
         throw Exception('Failed to load checkout information');
       }
     } catch (e) {
+      print('Failed to load checkout information: $e');
       throw Exception('Failed to load checkout information: $e');
     }
   }
@@ -253,4 +258,341 @@ class ApiConnection {
       throw Exception('Failed to load stores');
     }
   }
+
+  Future<Map<String, dynamic>> fetchVendorTracking(String orderId) async {
+    final String url = baseUrl + 'fetch_vendor_tracking.php';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'order_id': orderId}),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load vendor tracking data');
+      }
+    } catch (e) {
+      throw Exception('Failed to load vendor tracking data: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> initializePayment(String email, int amount) async {
+    final String url = 'https://api.paystack.co/transaction/initialize';
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer sk_test_c276989ec344e7fa1eafa1bfcf19bbb4e4b7d459',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'email': email,
+        'amount': amount,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to initialize payment');
+    }
+  }
+
+  Future<void> verifyPayment(String reference) async {
+    final String url = 'https://api.paystack.co/transaction/verify/$reference';
+    final response = await http.get(Uri.parse(url), headers: {
+      'Authorization': 'Bearer sk_test_c276989ec344e7fa1eafa1bfcf19bbb4e4b7d459',
+    });
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['status'] == true) {
+        // Payment successful
+        print('Payment successful');
+      } else {
+        // Payment failed
+        print('Payment failed');
+      }
+    } else {
+      // Handle error
+      print('Failed to verify payment');
+    }
+  }
+
+  Future<void> recordPayment(int orderId, double amount) async {
+    final url = Uri.parse('$baseUrl/record_payment.php');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'order_id': orderId,
+        'amount': amount,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to record payment');
+    } else {
+      final jsonResponse = json.decode(response.body);
+      if (!jsonResponse.containsKey('success') || !jsonResponse['success']) {
+        throw Exception('Failed to record payment: ${jsonResponse['error']}');
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> createOrder(int userId, double totalAmount, String orderStatus) async {
+    final url = Uri.parse('$baseUrl/create_order.php');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'user_id': userId,
+        'total_amount': totalAmount,
+        'order_status': orderStatus,
+      }),
+    );
+
+    // Debugging statement to print the response body
+    print('Create Order Response Body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      if (jsonResponse.containsKey('order_id')) {
+        return jsonResponse;
+      } else {
+        throw Exception('Failed to create order: ${jsonResponse['error']}');
+      }
+    } else {
+      throw Exception('Failed to create order');
+    }
+  }
+
+  Future<Map<String, dynamic>> createOrderDetail(int orderId, int productId, double price) async {
+    final String url = baseUrl + 'create_order_detail.php';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'order_id': orderId,
+          'product_id': productId,
+          'price': price,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        print('Create Order Detail Response Body: ${response.body}');
+        throw Exception('Failed to create order detail: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to create order detail: $e');
+    }
+  }
+
+  Future<void> createOrderTracking(int orderId, String status, String estimatedDeliveryDate) async {
+    final String url = baseUrl + 'create_order_tracking.php';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'order_id': orderId,
+          'status': status,
+          'estimated_delivery_date': estimatedDeliveryDate,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to create order tracking');
+      }
+    } catch (e) {
+      throw Exception('Failed to create order tracking: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchBuyerTracking(String orderId) async {
+    final String url = baseUrl + 'fetch_buyer_tracking.php';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'order_id': orderId}),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load buyer tracking data');
+      }
+    } catch (e) {
+            throw Exception('Failed to load buyer tracking data: $e');
+    }
+  }
+
+  Future<List<dynamic>> fetchOrders(int userId) async {
+    final String url = baseUrl + 'fetch_orders.php';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'user_id': userId}),
+      );
+
+      print('Response body: ${response.body}'); // Log the response body
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData is List) {
+          return responseData;
+        } else if (responseData is Map && responseData.containsKey('orders')) {
+          return responseData['orders'];
+        } else {
+          throw Exception('Unexpected response format');
+        }
+      } else {
+        throw Exception('Failed to load orders');
+      }
+    } catch (e) {
+      throw Exception('Failed to load orders: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchVendorStats(int vendorId) async {
+    final String url = '$baseUrl/fetch_vendor_stats.php';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'vendor_id': vendorId}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = json.decode(response.body);
+        return responseBody;
+      } else {
+        print('Failed to load vendor stats. Status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        throw Exception('Failed to load vendor stats');
+      }
+    } catch (e) {
+      print('Failed to load vendor stats: $e');
+      throw Exception('Failed to load vendor stats: $e');
+    }
+  }
+
+
+
+  Future<List<dynamic>> fetchPendingDeliveries(int vendorId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/fetch_pending_deliveries.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'vendor_id': vendorId}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data is List) {
+        return data;
+      } else {
+        throw Exception('Unexpected response format');
+      }
+    } else {
+      throw Exception('Failed to load pending deliveries');
+    }
+  }
+
+Future<Map<String, dynamic>> fetchOrderDetails(String orderId) async {
+  final String url = baseUrl + 'fetch_order_details.php';
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'order_id': orderId}),
+    );
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      // Check if data is of expected type
+      if (data is Map<String, dynamic>) {
+        return data;
+      } else {
+        throw Exception('Unexpected response format: ${data.runtimeType}');
+      }
+    } else {
+      throw Exception('Failed to load order details: ${response.statusCode} - ${response.reasonPhrase}');
+    }
+  } catch (e) {
+    print('Failed to load order details: $e');
+    throw Exception('Failed to load order details: $e');
+  }
+}
+
+   Future<List<dynamic>> fetchVendorOrders(int vendorId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/fetch_vendor_orders.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'vendor_id': vendorId}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load orders');
+    }
+  }
+
+  Future<void> updateOrderStatus(String orderId, String status) async {
+    final String url = baseUrl + 'update_order_ready_status.php';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'order_id': orderId, 'status': status}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['message'] == 'Order status updated successfully') {
+          return;
+        } else {
+          throw Exception('Failed to update order status');
+        }
+      } else {
+        throw Exception('Failed to update order status');
+      }
+    } catch (e) {
+      print('Failed to update order status: $e');
+      throw Exception('Failed to update order status: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchVendorTrackingDetails(String orderId) async {
+    final String url = baseUrl + 'fetch_vendor_tracking.php';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'order_id': orderId}),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load vendor tracking data');
+      }
+    } catch (e) {
+      throw Exception('Failed to load vendor tracking data: $e');
+    }
+  }
+
 }

@@ -13,8 +13,10 @@ import 'screens/home_screen.dart';
 import 'controllers/add_product_controller.dart';
 import 'providers/vendor_provider.dart';
 import 'providers/cart_provider.dart';
+import 'screens/payment_page.dart'; // Updated to use the new PaymentPage
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MultiProvider(
       providers: [
@@ -36,10 +38,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: const Color(0xFF69734E), // This will affect the active step color
+        primaryColor: const Color(0xFF69734E),
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFF69734E), // Active step color
-          secondary: Colors.grey, // Inactive step color
+          primary: Color(0xFF69734E),
+          secondary: Colors.grey,
         ),
         textTheme: const TextTheme(
           bodyLarge: TextStyle(
@@ -62,6 +64,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
         '/home': (context) => HomeScreen(),
+        '/payment': (context) => PaymentPage(amount: 0, email: ''), // Default values for now
       },
     );
   }

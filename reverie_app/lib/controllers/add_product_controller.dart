@@ -150,7 +150,7 @@ class AddProductController with ChangeNotifier {
       print('Copying image to: $fullPath');
       final File localImage = await File(imagePath!).copy(fullPath);
 
-      final request = http.MultipartRequest('POST', Uri.parse('http://192.168.162.65/api/reverie/add_product.php'));
+      final request = http.MultipartRequest('POST', Uri.parse('http://192.168.100.100/api/reverie/add_product.php'));
       request.fields['user_id'] = userId.toString();
       request.fields['title'] = titleController.text;
       request.fields['description'] = descriptionController.text;
