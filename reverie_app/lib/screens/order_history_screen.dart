@@ -1,33 +1,49 @@
 import 'package:flutter/material.dart';
-import 'order_tracking_screen.dart';  // Import the OrderTrackingScreen
+import 'package:provider/provider.dart';
+import '/services/api_connection.dart';
+import 'order_tracking_screen.dart';
+import '/providers/user_provider.dart';
 
-class OrderHistoryScreen extends StatelessWidget {
-  final List<Map<String, String>> orders = [
-    {
-      'id': '1',
-      'title': 'Order #12345',
-      'status': 'Delivered',
-      'date': 'June 25, 2023',
-      'image': 'https://via.placeholder.com/100',
-      'price': '\$56.99'
-    },
-    {
-      'id': '2',
-      'title': 'Order #12346',
-      'status': 'Out for delivery',
-      'date': 'June 26, 2023',
-      'image': 'https://via.placeholder.com/100',
-      'price': '\$74.50'
-    },
-    {
-      'id': '3',
-      'title': 'Order #12347',
-      'status': 'Processing',
-      'date': 'June 27, 2023',
-      'image': 'https://via.placeholder.com/100',
-      'price': '\$120.00'
-    },
-  ];
+class OrderHistoryScreen extends StatefulWidget {
+  @override
+  _OrderHistoryScreenState createState() => _OrderHistoryScreenState();
+}
+
+class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
+  Future<List<Map<String, dynamic>>>? futureOrders;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = Provider.of<UserProvider>(context, listen: false).userId;
+      if (userId != null) {
+        setState(() {
+          futureOrders = fetchOrders(userId);
+        });
+      } else {
+        setState(() {
+          futureOrders = Future.error("User ID not found");
+        });
+      }
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> fetchOrders(int userId) async {
+    final api = ApiConnection();
+    final orders = await api.fetchOrders(userId);
+    return orders.map<Map<String, dynamic>>((order) {
+      final firstProduct = order['products'][0]; // Assuming at least one product per order
+      return {
+        'id': order['id'].toString(),
+        'title': firstProduct['title'],
+        'status': order['status'],
+        'date': order['date'],
+        'image': firstProduct['image'],
+        'price': firstProduct['price'].toString(),
+      };
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,37 +68,41 @@ class OrderHistoryScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: orders.length,
-        itemBuilder: (BuildContext context, int index) {
-          return _buildOrderItem(context, orders[index]);
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: futureOrders,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error fetching orders: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No orders found'));
+          }
+
+          final orders = snapshot.data!;
+          return ListView.builder(
+            padding: const EdgeInsets.all(16.0),
+            itemCount: orders.length,
+            itemBuilder: (BuildContext context, int index) {
+              return _buildOrderItem(context, orders[index]);
+            },
+          );
         },
       ),
     );
   }
 
-  Widget _buildOrderItem(BuildContext context, Map<String, String> order) {
+  Widget _buildOrderItem(BuildContext context, Map<String, dynamic> order) {
     return GestureDetector(
       onTap: () {
-        if (order['status'] == 'Out for delivery') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OrderTrackingScreen(
-                orderId: order['id']!,
-                items: [
-                  {'name': 'A-line Mini Dress', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$24.99'},
-                  {'name': 'Fitted T-shirt', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$6.99'},
-                  {'name': 'Draped One-shoulder Top', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$19.99'},
-                  {'name': 'Regular Fit Cotton Shorts', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$4.99'},
-                ],
-                pickupStatus: 'Out for delivery',
-                estimatedDeliveryDate: 'Within 3-5 business days',
-              ),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OrderTrackingScreen(
+              orderId: order['id']!,
             ),
-          );
-        }
+          ),
+        );
       },
       child: Card(
         elevation: 2,
@@ -158,10 +178,4 @@ class OrderHistoryScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: OrderHistoryScreen(),
-  ));
 }

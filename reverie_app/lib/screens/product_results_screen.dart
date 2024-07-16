@@ -79,7 +79,7 @@ class ProductResultsScreen extends StatelessWidget {
   Widget _buildProductItem(dynamic product) {
     String imageUrl = product['image_path'];
     if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
-      imageUrl = 'http://192.168.162.65/api/reverie/' + imageUrl; 
+      imageUrl = 'http://192.168.100.100/api/reverie/' + imageUrl; 
     }
 
     return Container(

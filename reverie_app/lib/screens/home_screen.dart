@@ -28,7 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _productsFuture = _apiConnection.fetchProducts();
   }
- void _onItemTapped(int index) {
+  
+  void _onItemTapped(int index) {
     if (index == 1) {
       Navigator.push(
         context,
@@ -48,10 +49,10 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } else if (index == 3) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
-      );
+       Navigator.push(
+         context,
+         MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
+       );
     } else if (index == 4) {
       Navigator.push(
         context,
@@ -198,6 +199,11 @@ class _HomeScreenState extends State<HomeScreen> {
       return Center(child: Text('No products available'));
     }
 
+    // Log image URLs
+    filteredProducts.forEach((product) {
+      print('Product title: ${product['title']} - Image URL: ${product['image_url']}');
+    });
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -214,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       imagePath: filteredProducts[0]['image_url'] ?? '',
                       title: filteredProducts[0]['title'] ?? 'No Title',
                       onBuyNow: () {
-                        Navigator.push(
+                                                Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => ProductDetailsScreen(product: filteredProducts[0])),
                         );
@@ -241,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'Top Categories',
               style: TextStyle(
-                               fontSize: 18,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Poppins',
                 color: Colors.black,
@@ -269,3 +275,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+                         

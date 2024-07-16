@@ -338,7 +338,7 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
                   topRight: Radius.circular(10),
                 ),
                 child: Image.network(
-                  'http://192.168.162.65/api/reverie/' + imagePath,
+                  'http://192.168.100.100/api/reverie/' + imagePath,
                   width: double.infinity,
                   height: 172,
                   fit: BoxFit.cover,

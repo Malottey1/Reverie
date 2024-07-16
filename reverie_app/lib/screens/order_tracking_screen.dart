@@ -1,70 +1,118 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class OrderTrackingScreen extends StatelessWidget {
   final String orderId;
-  final List<Map<String, String>> items;
-  final String pickupStatus;
-  final String estimatedDeliveryDate;
 
-  OrderTrackingScreen({
-    required this.orderId,
-    required this.items,
-    required this.pickupStatus,
-    required this.estimatedDeliveryDate,
-  });
+  OrderTrackingScreen({required this.orderId});
+
+  Future<Map<String, dynamic>> fetchTrackingDetails(String orderId) async {
+    final String url = 'http://192.168.100.100/api/reverie/fetch_buyer_tracking.php';
+    try {
+      print('Fetching tracking details for order ID: $orderId');  // Log the start of the fetch
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'order_id': orderId}),
+      );
+
+      print('Response status code: ${response.statusCode}');  // Log response status code
+      print('Response body: ${response.body}');  // Log response body
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load tracking details');
+      }
+    } catch (e) {
+      print('Exception caught: $e');  // Log any exception that occurs
+      throw Exception('Failed to load tracking details: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    int statusIndex;
-    if (pickupStatus == 'Ready') {
-      statusIndex = 0;
-    } else if (pickupStatus == 'Picked Up') {
-      statusIndex = 1;
-    } else if (pickupStatus == 'Delivered') {
-      statusIndex = 2;
-    } else {
-      statusIndex = -1; // Default case
-    }
-
-    return Scaffold(
-      backgroundColor: Color(0xFFDDDBD3),
-      appBar: AppBar(
-        backgroundColor: Color(0xFF69734E),
-        title: Text(
-          'Tracking Details',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildOrderSummary(),
-            SizedBox(height: 20),
-            _buildOrderInfo(orderId),
-            SizedBox(height: 20),
-            _buildItemsInfo(items),
-            SizedBox(height: 20),
-            _buildPickupStatus(statusIndex),
-          ],
-        ),
-      ),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: fetchTrackingDetails(orderId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: Color(0xFFDDDBD3),
+            appBar: AppBar(
+              backgroundColor: Color(0xFF69734E),
+              title: Text(
+                'Tracking Details',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                ),
+              ),
+              centerTitle: true,
+            ),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        } else if (snapshot.hasError) {
+          print('Error in snapshot: ${snapshot.error}');  // Log the error in the snapshot
+          return Scaffold(
+            backgroundColor: Color(0xFFDDDBD3),
+            appBar: AppBar(
+              backgroundColor: Color(0xFF69734E),
+              title: Text(
+                'Tracking Details',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                ),
+              ),
+              centerTitle: true,
+            ),
+            body: Center(child: Text('Error fetching tracking details')),
+          );
+        } else {
+          final trackingDetails = snapshot.data!;
+          return Scaffold(
+            backgroundColor: Color(0xFFDDDBD3),
+            appBar: AppBar(
+              backgroundColor: Color(0xFF69734E),
+              title: Text(
+                'Tracking Details',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                ),
+              ),
+              centerTitle: true,
+            ),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildOrderSummary(trackingDetails),
+                  SizedBox(height: 20),
+                  _buildOrderInfo(orderId),
+                  SizedBox(height: 20),
+                  _buildItemsInfo(trackingDetails['items']),
+                  SizedBox(height: 20),
+                  _buildPickupStatus(trackingDetails['status'], trackingDetails['estimated_delivery_date']),
+                ],
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 
-  Widget _buildOrderSummary() {
+  Widget _buildOrderSummary(Map<String, dynamic> trackingDetails) {
     return Column(
       children: [
         Center(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              'assets/men.png', // Replace with the image asset for the item
+            child: Image.network(
+              trackingDetails['items'][0]['imageUrl'],
               width: 100,
               height: 100,
               fit: BoxFit.cover,
@@ -74,7 +122,7 @@ class OrderTrackingScreen extends StatelessWidget {
         SizedBox(height: 10),
         Center(
           child: Text(
-            'Men Graphic Tee',
+            trackingDetails['items'][0]['name'],
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 18,
@@ -86,7 +134,7 @@ class OrderTrackingScreen extends StatelessWidget {
         SizedBox(height: 10),
         Center(
           child: Text(
-            'To Ahmed',
+            'To Ahmed', // This should be dynamic based on your data
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 14,
@@ -97,7 +145,7 @@ class OrderTrackingScreen extends StatelessWidget {
         SizedBox(height: 20),
         Center(
           child: Text(
-            'Estimated day of delivery: $estimatedDeliveryDate',
+            'Estimated day of delivery: ${trackingDetails['estimated_delivery_date']}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 14,
@@ -126,7 +174,7 @@ class OrderTrackingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemsInfo(List<Map<String, String>> items) {
+  Widget _buildItemsInfo(List<dynamic> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -138,18 +186,29 @@ class OrderTrackingScreen extends StatelessWidget {
             color: Colors.black,
           ),
         ),
-        ...items.map((item) => _buildOrderItem(item['name']!, item['imageUrl']!, item['price']!)).toList(),
+        ...items.map((item) => _buildOrderItem(item['name'], item['imageUrl'], item['price'])).toList(),
       ],
     );
   }
 
-  Widget _buildPickupStatus(int statusIndex) {
+    Widget _buildPickupStatus(String status, String estimatedDeliveryDate) {
     List<String> statuses = ['Ready', 'Picked Up', 'Delivered'];
     List<String> descriptions = [
       'Your item is ready for pickup.',
       'Your item has been picked up.',
       'Your item has been delivered.'
     ];
+
+    int statusIndex;
+    if (status == 'Ready') {
+      statusIndex = 0;
+    } else if (status == 'Picked Up') {
+      statusIndex = 1;
+    } else if (status == 'Delivered') {
+      statusIndex = 2;
+    } else {
+      statusIndex = -1; // Default case
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,20 +318,4 @@ class OrderTrackingScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: OrderTrackingScreen(
-      orderId: '1234567890',
-      items: [
-        {'name': 'A-line Mini Dress', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$24.99'},
-        {'name': 'Fitted T-shirt', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$6.99'},
-        {'name': 'Draped One-shoulder Top', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$19.99'},
-        {'name': 'Regular Fit Cotton Shorts', 'imageUrl': 'https://via.placeholder.com/100x150', 'price': '\$4.99'},
-      ],
-      pickupStatus: 'Picked Up',
-      estimatedDeliveryDate: 'Within 3-5 business days',
-    ),
-  ));
 }

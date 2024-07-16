@@ -46,7 +46,7 @@ class _BillingAddressScreenState extends State<BillingAddressScreen> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (_formKey.currentState!.validate()) {
       final response = await http.post(
-        Uri.parse('http://192.168.162.65/api/reverie/update_billing_address.php'),
+        Uri.parse('http://192.168.100.100/api/reverie/update_billing_address.php'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

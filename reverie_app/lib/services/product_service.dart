@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ProductService {
-  final String host = "http://192.168.162.65/api/reverie/";
+  final String host = "http://192.168.100.100/api/reverie/";
 
   Future<Map<String, dynamic>> addProduct(Map<String, dynamic> product) async {
     final response = await http.post(

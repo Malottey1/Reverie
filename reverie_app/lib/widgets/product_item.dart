@@ -9,6 +9,9 @@ class ProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Log the image URL
+    print('Image URL: $imagePath');
+    
     return Container(
       width: 180,
       margin: EdgeInsets.only(right: 10),
