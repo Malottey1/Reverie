@@ -251,15 +251,7 @@ INSERT INTO `Sizes` (`size_id`, `size_name`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Stores`
---
 
-CREATE TABLE `Stores` (
-  `store_id` int(11) NOT NULL,
-  `vendor_id` int(11) NOT NULL,
-  `store_description` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -431,12 +423,6 @@ ALTER TABLE `ShippingAddresses`
 ALTER TABLE `Sizes`
   ADD PRIMARY KEY (`size_id`);
 
---
--- Indexes for table `Stores`
---
-ALTER TABLE `Stores`
-  ADD PRIMARY KEY (`store_id`),
-  ADD KEY `vendor_id` (`vendor_id`);
 
 --
 -- Indexes for table `TargetGroups`
@@ -544,11 +530,7 @@ ALTER TABLE `ShippingAddresses`
 ALTER TABLE `Sizes`
   MODIFY `size_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
---
--- AUTO_INCREMENT for table `Stores`
---
-ALTER TABLE `Stores`
-  MODIFY `store_id` int(11) NOT NULL AUTO_INCREMENT;
+
 
 --
 -- AUTO_INCREMENT for table `TargetGroups`
@@ -645,10 +627,7 @@ ALTER TABLE `ShippingAddresses`
   ADD CONSTRAINT `shippingaddresses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`);
 
 --
--- Constraints for table `Stores`
---
-ALTER TABLE `Stores`
-  ADD CONSTRAINT `stores_ibfk_1` FOREIGN KEY (`vendor_id`) REFERENCES `Vendors` (`vendor_id`);
+
 
 --
 -- Constraints for table `Vendors`

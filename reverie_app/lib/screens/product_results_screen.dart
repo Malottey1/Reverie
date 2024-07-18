@@ -66,7 +66,19 @@ class ProductResultsScreen extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ProductDetailsScreen(product: product),
+                builder: (context) => ProductDetailsScreen(
+                  product: {
+                    'product_id': product['product_id'],
+                    'title': product['title'],
+                    'price': product['price'],
+                    'old_price': product['old_price'],
+                    'image_url': 'http://192.168.102.56/api/reverie/product-images/' + product['image_path'],
+                    'description': product['description'],
+                    'size_name': product['size_name'],
+                    'brand': product['brand'],
+                    'condition_name': product['condition_name'],
+                  },
+                ),
               ),
             );
           },
@@ -79,7 +91,7 @@ class ProductResultsScreen extends StatelessWidget {
   Widget _buildProductItem(dynamic product) {
     String imageUrl = product['image_path'];
     if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
-      imageUrl = 'http://192.168.100.100/api/reverie/' + imageUrl; 
+      imageUrl = 'http://192.168.102.56/api/reverie/product-images/' + imageUrl; 
     }
 
     return Container(
@@ -108,7 +120,7 @@ class ProductResultsScreen extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                                            width: double.infinity,
+                      width: double.infinity,
                       height: 172,
                       color: Colors.grey,
                       child: Center(

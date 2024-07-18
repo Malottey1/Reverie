@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_connection.dart';
-import '../providers/user_provider.dart';
 import 'store.dart'; // Import the Store screen
 
 class StoreListScreen extends StatefulWidget {
@@ -12,6 +11,7 @@ class StoreListScreen extends StatefulWidget {
 class _StoreListScreenState extends State<StoreListScreen> {
   List<Map<String, dynamic>> _stores = [];
   bool _isLoading = true;
+  final String baseUrl = "http://192.168.102.56/api/reverie/profile-photos/"; // Base URL for images
 
   @override
   void initState() {
@@ -23,7 +23,15 @@ class _StoreListScreenState extends State<StoreListScreen> {
     try {
       List<dynamic> results = await ApiConnection().fetchStores();
       setState(() {
-        _stores = results.cast<Map<String, dynamic>>();
+        _stores = results.cast<Map<String, dynamic>>().map((store) {
+          // Ensure vendor_id is parsed as an int
+          return {
+            'vendor_id': int.parse(store['vendor_id']),
+            'profile_photo': store['profile_photo'],
+            'business_name': store['business_name'],
+            'business_description': store['business_description'],
+          };
+        }).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -68,6 +76,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
                 final store = _stores[index];
                 return _buildStoreItem(
                   context,
+                  store['vendor_id'],
                   store['profile_photo'] ?? '',
                   store['business_name'] ?? 'Store Name',
                   store['business_description'] ?? 'Store Description',
@@ -77,13 +86,14 @@ class _StoreListScreenState extends State<StoreListScreen> {
     );
   }
 
-  Widget _buildStoreItem(BuildContext context, String imagePath, String title, String subtitle) {
+  Widget _buildStoreItem(BuildContext context, int vendorId, String imagePath, String title, String subtitle) {
+    String fullImagePath = imagePath.isNotEmpty ? baseUrl + imagePath : 'assets/placeholder.png';
     return ListTile(
       leading: CircleAvatar(
         radius: 30,
-        backgroundImage: imagePath.isNotEmpty
-            ? NetworkImage(imagePath) as ImageProvider<Object> // Cast to ImageProvider<Object>
-            : AssetImage('assets/placeholder.png') as ImageProvider<Object>, // Cast to ImageProvider<Object>
+        backgroundImage: fullImagePath.startsWith('http')
+            ? NetworkImage(fullImagePath)
+            : AssetImage(fullImagePath) as ImageProvider,
       ),
       title: Text(
         title,
@@ -105,8 +115,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => StoreScreen(
-              storeName: title,
-              storeDescription: subtitle,
+              vendorId: vendorId,
             ),
           ),
         );

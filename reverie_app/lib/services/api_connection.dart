@@ -4,7 +4,7 @@ import '../models/cart_item.dart';
 import '../models/checkout_info.dart';
 
 class ApiConnection {
-  final String baseUrl = "http://192.168.100.100/api/reverie/";
+  final String baseUrl = "http://192.168.102.56/api/reverie/";
 
   Future<Map<String, dynamic>> registerUser(Map<String, dynamic> user) async {
     final String url = baseUrl + 'register.php';
@@ -210,6 +210,20 @@ class ApiConnection {
       return json.decode(response.body);
     } else {
       throw Exception('Failed to load products');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchVendorDetails(int vendorId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/fetch_vendor_details.php'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"vendor_id": vendorId}),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load vendor details');
     }
   }
 
