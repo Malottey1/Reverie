@@ -14,7 +14,7 @@ class CheckoutButton extends StatelessWidget {
   const CheckoutButton({Key? key, required this.totalAmount}) : super(key: key);
 
   Future<void> createOrderTracking(int orderId, String status, String estimatedDeliveryDate) async {
-    final String url = 'http://192.168.100.100/api/reverie/create_order_tracking.php';
+    final String url = 'http://192.168.102.56/api/reverie/create_order_tracking.php';
     try {
       final response = await http.post(
         Uri.parse(url),

@@ -33,14 +33,17 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     final api = ApiConnection();
     final orders = await api.fetchOrders(userId);
     return orders.map<Map<String, dynamic>>((order) {
-      final firstProduct = order['products'][0]; // Assuming at least one product per order
       return {
         'id': order['id'].toString(),
-        'title': firstProduct['title'],
         'status': order['status'],
         'date': order['date'],
-        'image': firstProduct['image'],
-        'price': firstProduct['price'].toString(),
+        'products': (order['products'] as List<dynamic>? ?? []).map<Map<String, dynamic>>((product) {
+          return {
+            'title': product['title'],
+            'image': product['image'],
+            'price': product['price'].toString(),
+          };
+        }).toList(),
       };
     }).toList();
   }
@@ -114,57 +117,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  order['image']!,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      order['title']!,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF69734E),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      order['status']!,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        color: order['status'] == 'Delivered'
-                            ? Color(0xFF69734E)
-                            : Color.fromARGB(255, 78, 118, 137),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      order['date']!,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        color: Colors.black54,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Text(
-                order['price']!,
+                'Order ID: ${order['id']}',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.bold,
@@ -172,6 +129,74 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   color: Color(0xFF69734E),
                 ),
               ),
+              SizedBox(height: 8),
+              Text(
+                'Status: ${order['status']}',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: order['status'] == 'Delivered'
+                      ? Color(0xFF69734E)
+                      : Color.fromARGB(255, 78, 118, 137),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Date: ${order['date']}',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.black54,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 16),
+              if (order['products'] != null && order['products'].isNotEmpty)
+                ...order['products'].map<Widget>((product) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            product['image'],
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product['title'],
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Color(0xFF69734E),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Price: GHS ${product['price']}',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
             ],
           ),
         ),

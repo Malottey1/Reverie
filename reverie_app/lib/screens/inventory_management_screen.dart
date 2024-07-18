@@ -102,7 +102,6 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
               ),
             ),
             SizedBox(height: 10),
-            _buildFilterChips(),
             SizedBox(height: 20),
             Expanded(
               child: _isLoading
@@ -122,38 +121,12 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
     );
   }
 
-  Widget _buildFilterChips() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        FilterChip(
-          label: Text('All'),
-          onSelected: (bool value) {},
-          backgroundColor: Color(0xFFDDDBD3),
-        ),
-        FilterChip(
-          label: Text('Category'),
-          onSelected: (bool value) {},
-          backgroundColor: Color(0xFFDDDBD3),
-        ),
-        FilterChip(
-          label: Text('Size'),
-          onSelected: (bool value) {},
-          backgroundColor: Color(0xFFDDDBD3),
-        ),
-        FilterChip(
-          label: Text('Color'),
-          onSelected: (bool value) {},
-          backgroundColor: Color(0xFFDDDBD3),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildInventoryItem(Map<String, dynamic> product) {
     String imageUrl = product['image_path'];
     if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
-      imageUrl = 'http://yourserver.com/api/reverie/' + imageUrl;
+      imageUrl = 'http://192.168.102.56/api/reverie/product-images/' + imageUrl;
     }
 
     return Container(

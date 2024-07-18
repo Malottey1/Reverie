@@ -114,6 +114,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Widget _buildProductImage() {
+    print('Image URL: ${widget.product['image_url']}');
     return Container(
       height: 250,
       child: ClipRRect(
@@ -300,12 +301,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Color.fromARGB(255, 78, 118, 137),
-              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+              padding: EdgeInsets.symmetric(horizontal: 100, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -321,32 +322,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 fontFamily: 'Poppins',
                 color: Colors.white,
                 fontSize: 16,
-              ),            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF69734E),
-              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: () {
-              // Handle buy now action
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProductDetailsScreen(product: widget.product)),
-              );
-            },
-            child: Text(
-              'Buy Now',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-          ),
+                   ),
         ],
       ),
     );

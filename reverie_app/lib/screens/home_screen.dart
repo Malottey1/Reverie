@@ -9,9 +9,10 @@ import 'product_details_screen.dart';
 import 'cart_screen.dart';
 import 'store_list_screen.dart';
 import 'settings_screen.dart';
-import 'vendor_store_screen.dart'; // Import VendorStoreScreen
+import 'vendor_store_screen.dart';
+import 'product_results_screen.dart'; // Import ProductResultsScreen
 import 'package:reverie_app/services/api_connection.dart';
-import '../providers/user_provider.dart'; // Import UserProvider
+import '../providers/user_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -28,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _productsFuture = _apiConnection.fetchProducts();
   }
-  
+
   void _onItemTapped(int index) {
     if (index == 1) {
       Navigator.push(
@@ -49,10 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } else if (index == 3) {
-       Navigator.push(
-         context,
-         MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
-       );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => OrderHistoryScreen()),
+      );
     } else if (index == 4) {
       Navigator.push(
         context,
@@ -63,6 +64,13 @@ class _HomeScreenState extends State<HomeScreen> {
         _selectedIndex = index;
       });
     }
+  }
+
+  void _performSearch(String query) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ProductResultsScreen(searchQuery: query)),
+    );
   }
 
   @override
@@ -199,11 +207,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return Center(child: Text('No products available'));
     }
 
-    // Log image URLs
-    filteredProducts.forEach((product) {
-      print('Product title: ${product['title']} - Image URL: ${product['image_url']}');
-    });
-
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -220,9 +223,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       imagePath: filteredProducts[0]['image_url'] ?? '',
                       title: filteredProducts[0]['title'] ?? 'No Title',
                       onBuyNow: () {
-                                                Navigator.push(
+                        Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ProductDetailsScreen(product: filteredProducts[0])),
+                          MaterialPageRoute(
+                            builder: (context) => ProductDetailsScreen(product: filteredProducts[0]),
+                          ),
                         );
                       },
                     ),
@@ -236,7 +241,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       onBuyNow: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ProductDetailsScreen(product: filteredProducts[1])),
+                          MaterialPageRoute(
+                            builder: (context) => ProductDetailsScreen(product: filteredProducts[1]),
+                          ),
                         );
                       },
                     ),
@@ -257,16 +264,32 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CategoryItem(title: 'Watches', imagePath: 'assets/sneakers.png'),
-                CategoryItem(title: 'Handbags', imagePath: 'assets/handbags.png'),
+                CategoryItem(
+                  title: 'Watches',
+                  imagePath: 'assets/watches.jpg',
+                  onTap: () => _performSearch('Watch'),
+                ),
+                CategoryItem(
+                  title: 'Handbags',
+                  imagePath: 'assets/handbags.png',
+                  onTap: () => _performSearch('Handbag'),
+                ),
               ],
             ),
             SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CategoryItem(title: 'Jackets', imagePath: 'assets/jackets.png'),
-                CategoryItem(title: 'Sweaters', imagePath: 'assets/sweaters.png'),
+                CategoryItem(
+                  title: 'Jackets',
+                  imagePath: 'assets/jackets.png',
+                  onTap: () => _performSearch('Jacket'),
+                ),
+                CategoryItem(
+                  title: 'Sweaters',
+                  imagePath: 'assets/sweaters.png',
+                  onTap: () => _performSearch('Sweater'),
+                ),
               ],
             ),
           ],
@@ -275,4 +298,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-                         

@@ -16,21 +16,24 @@ class VendorStoreScreen extends StatefulWidget {
 class _VendorStoreScreenState extends State<VendorStoreScreen> {
   List<Map<String, dynamic>> _products = [];
   bool _isLoading = true;
+  Map<String, dynamic>? _vendorDetails;
 
   @override
   void initState() {
     super.initState();
-    _fetchProducts();
+    _fetchVendorDetailsAndProducts();
   }
 
-  Future<void> _fetchProducts() async {
+  Future<void> _fetchVendorDetailsAndProducts() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final vendorId = userProvider.vendorId;
 
     try {
-      List<dynamic> results = await ApiConnection().fetchProductsByVendor(vendorId!);
+      final vendorDetails = await ApiConnection().fetchVendorDetails(vendorId!);
+      final products = await ApiConnection().fetchProductsByVendor(vendorId);
       setState(() {
-        _products = results.cast<Map<String, dynamic>>();
+        _vendorDetails = vendorDetails;
+        _products = products.cast<Map<String, dynamic>>();
         _isLoading = false;
       });
     } catch (e) {
@@ -88,21 +91,26 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
                           CircleAvatar(
                             radius: 40,
                             backgroundColor: Colors.grey,
-                            child: CircleAvatar(
-                              radius: 38,
-                              backgroundColor: Colors.white,
-                              child: Text(
-                                'Bershka',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
+                            backgroundImage: _vendorDetails?['profile_photo'] != null
+                                ? NetworkImage('http://192.168.102.56/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
+                                : null,
+                            child: _vendorDetails?['profile_photo'] == null
+                                ? CircleAvatar(
+                                    radius: 38,
+                                    backgroundColor: Colors.white,
+                                    child: Text(
+                                      _vendorDetails?['business_name']?.substring(0, 1) ?? '',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  )
+                                : null,
                           ),
                           SizedBox(height: 10),
                           Text(
-                            'Bershka',
+                            _vendorDetails?['business_name'] ?? 'Store',
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 20,
@@ -312,7 +320,7 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
             context,
             product['title'],
             '\$${product['price']}',
-            product['old_price'] != null ? '\$${product['old_price']}' : '',
+                        product['old_price'] != null ? '\$${product['old_price']}' : '',
             product['is_on_sale'] == 1,
             product['image_path'],
           );
@@ -328,7 +336,7 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Stack(
             children: [
@@ -338,7 +346,7 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
                   topRight: Radius.circular(10),
                 ),
                 child: Image.network(
-                  'http://192.168.100.100/api/reverie/' + imagePath,
+                  'http://192.168.102.56/api/reverie/product-images/' + imagePath,
                   width: double.infinity,
                   height: 172,
                   fit: BoxFit.cover,
