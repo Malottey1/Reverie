@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import 'screens/splash_screen.dart';
@@ -15,8 +16,22 @@ import 'providers/vendor_provider.dart';
 import 'providers/cart_provider.dart';
 import 'screens/payment_page.dart'; // Updated to use the new PaymentPage
 
-void main() {
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialization settings for Android
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  // Initialization settings for all platforms
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  // Initialize the plugin
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
   runApp(
     MultiProvider(
       providers: [
@@ -25,7 +40,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => VendorProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }

@@ -53,7 +53,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
     print("Saving shipping address for user_id: ${userProvider.userId}");
     if (_formKey.currentState!.validate()) {
       final response = await http.post(
-        Uri.parse('http://192.168.102.56/api/reverie/update_shipping_address.php'),
+        Uri.parse('http://192.168.104.167/api/reverie/update_shipping_address.php'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

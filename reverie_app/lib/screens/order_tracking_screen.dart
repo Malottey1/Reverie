@@ -8,7 +8,7 @@ class OrderTrackingScreen extends StatelessWidget {
   OrderTrackingScreen({required this.orderId});
 
   Future<Map<String, dynamic>> fetchTrackingDetails(String orderId) async {
-    final String url = 'http://192.168.102.56/api/reverie/fetch_buyer_tracking.php';
+    final String url = 'http://192.168.104.167/api/reverie/fetch_buyer_tracking.php';
     try {
       print('Fetching tracking details for order ID: $orderId');  // Log the start of the fetch
       final response = await http.post(

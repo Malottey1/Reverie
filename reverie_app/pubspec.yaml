@@ -22,6 +22,8 @@ dependencies:
   flutter_paystack: ^1.0.7
   fl_chart: ^0.68.0
   cached_network_image: ^3.2.1
+  flutter_local_notifications: ^17.2.1+2
+  intl: ^0.17.0
 
 dev_dependencies:
   flutter_test:

@@ -272,7 +272,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
   }
 
   void _markAsReady(BuildContext context) async {
-    final url = 'http://192.168.102.56/api/reverie/update_order_ready_status.php';
+    final url = 'http://192.168.104.167/api/reverie/update_order_ready_status.php';
     try {
       final response = await http.post(
         Uri.parse(url),

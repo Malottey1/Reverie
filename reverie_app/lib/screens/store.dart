@@ -84,7 +84,7 @@ class _StoreScreenState extends State<StoreScreen> {
                             radius: 40,
                             backgroundColor: Colors.grey,
                             backgroundImage: _vendorDetails?['profile_photo'] != null
-                                ? NetworkImage('http://192.168.102.56/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
+                                ? NetworkImage('http://192.168.104.167/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
                                 : null,
                             child: _vendorDetails?['profile_photo'] == null
                                 ? CircleAvatar(
@@ -229,7 +229,7 @@ class _StoreScreenState extends State<StoreScreen> {
                 MaterialPageRoute(
                   builder: (context) => ProductDetailsScreen(product: {
                     ...product,
-                    'image_url': 'http://192.168.102.56/api/reverie/product-images/' + (product['image_path'] ?? ''),
+                    'image_url': 'http://192.168.104.167/api/reverie/product-images/' + (product['image_path'] ?? ''),
                   }),
                 ),
               );
@@ -265,7 +265,7 @@ class _StoreScreenState extends State<StoreScreen> {
                   topRight: Radius.circular(10),
                 ),
                 child: Image.network(
-                  'http://192.168.102.56/api/reverie/product-images/' + imagePath,
+                  'http://192.168.104.167/api/reverie/product-images/' + imagePath,
                   width: double.infinity,
                   height: 172,
                   fit: BoxFit.cover,
