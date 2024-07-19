@@ -4,7 +4,7 @@ import '../models/cart_item.dart';
 import '../models/checkout_info.dart';
 
 class ApiConnection {
-  final String baseUrl = "http://192.168.102.56/api/reverie/";
+  final String baseUrl = "http://192.168.104.167/api/reverie/";
 
   Future<Map<String, dynamic>> registerUser(Map<String, dynamic> user) async {
     final String url = baseUrl + 'register.php';

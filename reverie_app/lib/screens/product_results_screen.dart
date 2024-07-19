@@ -72,7 +72,7 @@ class ProductResultsScreen extends StatelessWidget {
                     'title': product['title'],
                     'price': product['price'],
                     'old_price': product['old_price'],
-                    'image_url': 'http://192.168.102.56/api/reverie/product-images/' + product['image_path'],
+                    'image_url': 'http://192.168.104.167/api/reverie/product-images/' + product['image_path'],
                     'description': product['description'],
                     'size_name': product['size_name'],
                     'brand': product['brand'],
@@ -91,7 +91,7 @@ class ProductResultsScreen extends StatelessWidget {
   Widget _buildProductItem(dynamic product) {
     String imageUrl = product['image_path'];
     if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
-      imageUrl = 'http://192.168.102.56/api/reverie/product-images/' + imageUrl; 
+      imageUrl = 'http://192.168.104.167/api/reverie/product-images/' + imageUrl; 
     }
 
     return Container(

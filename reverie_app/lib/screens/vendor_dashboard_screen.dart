@@ -70,7 +70,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
    Future<void> _fetchVendorStats(int vendorId) async {
      try {
        final response = await http.post(
-         Uri.parse('http://192.168.102.56/api/reverie/fetch_vendor_stats.php'),
+         Uri.parse('http://192.168.104.167/api/reverie/fetch_vendor_stats.php'),
          headers: {'Content-Type': 'application/json'},
          body: json.encode({'vendor_id': vendorId}),
        );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reverie_app/screens/order_confirmation_screen.dart';
 import 'package:reverie_app/screens/payment_page.dart';
+import 'package:reverie_app/services/notification_helper.dart';
 import '../providers/user_provider.dart';
 import '../services/api_connection.dart';
 import 'dart:convert';
@@ -14,7 +15,7 @@ class CheckoutButton extends StatelessWidget {
   const CheckoutButton({Key? key, required this.totalAmount}) : super(key: key);
 
   Future<void> createOrderTracking(int orderId, String status, String estimatedDeliveryDate) async {
-    final String url = 'http://192.168.102.56/api/reverie/create_order_tracking.php';
+    final String url = 'http://192.168.104.167/api/reverie/create_order_tracking.php';
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -84,6 +85,10 @@ class CheckoutButton extends StatelessWidget {
               // Create the tracking record with the calculated delivery date
               final estimatedDeliveryDate = calculateEstimatedDeliveryDate();
               await createOrderTracking(orderId, 'Ready', estimatedDeliveryDate);
+
+              // Show order placed notification
+              await showNotification('Order Placed', 'Your order has been placed successfully!');
+              print('Notification should have been shown.');
 
               Navigator.pushReplacement(
                 context,

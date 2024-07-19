@@ -126,7 +126,7 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
   Widget _buildInventoryItem(Map<String, dynamic> product) {
     String imageUrl = product['image_path'];
     if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
-      imageUrl = 'http://192.168.102.56/api/reverie/product-images/' + imageUrl;
+      imageUrl = 'http://192.168.104.167/api/reverie/product-images/' + imageUrl;
     }
 
     return Container(

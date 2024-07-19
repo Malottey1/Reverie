@@ -92,7 +92,7 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
                             radius: 40,
                             backgroundColor: Colors.grey,
                             backgroundImage: _vendorDetails?['profile_photo'] != null
-                                ? NetworkImage('http://192.168.102.56/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
+                                ? NetworkImage('http://192.168.104.167/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
                                 : null,
                             child: _vendorDetails?['profile_photo'] == null
                                 ? CircleAvatar(
@@ -346,7 +346,7 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
                   topRight: Radius.circular(10),
                 ),
                 child: Image.network(
-                  'http://192.168.102.56/api/reverie/product-images/' + imagePath,
+                  'http://192.168.104.167/api/reverie/product-images/' + imagePath,
                   width: double.infinity,
                   height: 172,
                   fit: BoxFit.cover,

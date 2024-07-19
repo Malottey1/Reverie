@@ -11,7 +11,7 @@ class StoreListScreen extends StatefulWidget {
 class _StoreListScreenState extends State<StoreListScreen> {
   List<Map<String, dynamic>> _stores = [];
   bool _isLoading = true;
-  final String baseUrl = "http://192.168.102.56/api/reverie/profile-photos/"; // Base URL for images
+  final String baseUrl = "http://192.168.104.167/api/reverie/profile-photos/"; // Base URL for images
 
   @override
   void initState() {

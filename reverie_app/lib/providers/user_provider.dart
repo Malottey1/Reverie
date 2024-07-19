@@ -57,7 +57,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> fetchUserInfo(int userId) async {
-    final url = 'http://192.168.102.56/api/reverie/get_user_info.php';
+    final url = 'http://192.168.104.167/api/reverie/get_user_info.php';
     print('Fetching user info from: $url');
 
     try {
@@ -79,7 +79,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> checkIfVendor(int userId) async {
-    final url = 'http://192.168.102.56/api/reverie/check_vendor.php';
+    final url = 'http://192.168.104.167/api/reverie/check_vendor.php';
     print('Checking if user is a vendor from: $url');
 
     try {
@@ -105,7 +105,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> fetchVendorOrders(int vendorId) async {
-    final url = 'http://192.168.102.56/api/reverie/fetch_vendor_orders.php';
+    final url = 'http://192.168.104.167/api/reverie/fetch_vendor_orders.php';
     print('Fetching vendor orders from: $url');
 
     try {
@@ -143,7 +143,7 @@ class UserProvider with ChangeNotifier {
 Future<void> fetchVendorDeliveredOrders(int vendorId) async {
   try {
     final response = await http.post(
-      Uri.parse('http://192.168.102.56/api/reverie/fetch_vendor_delivered_orders.php'),
+      Uri.parse('http://192.168.104.167/api/reverie/fetch_vendor_delivered_orders.php'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'vendor_id': vendorId}),
     );
