@@ -1,12 +1,139 @@
 import 'package:flutter/material.dart';
-import 'my_information_screen.dart'; // Import your screen files accordingly
+import 'package:provider/provider.dart';
+import 'my_information_screen.dart';
 import 'billing_address_screen.dart';
 import 'shipping_address_screen.dart';
-import 'payment_selection_screen.dart';
-import 'order_details.dart';
 import 'order_confirmation_screen.dart';
+import '../models/checkout_info.dart';
+import '../models/cart_item.dart';
+import '../providers/user_provider.dart';
+import '../services/api_connection.dart';
+import '/widgets/information_tile.dart';
+import '/widgets/package_details.dart';
+import '/widgets/summary.dart';
+import '/widgets/total.dart';
+import '/widgets/checkout_button.dart';
 
-class CheckoutScreen extends StatelessWidget {
+class CheckoutScreen extends StatefulWidget {
+  @override
+  _CheckoutScreenState createState() => _CheckoutScreenState();
+}
+
+class _CheckoutScreenState extends State<CheckoutScreen> {
+  late Future<CheckoutInfo> _checkoutInfoFuture;
+  late Future<List<CartItem>> _cartItemsFuture;
+  double _totalAmount = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      _showInfoDialog(context);
+    });
+  }
+
+  void _loadData() {
+    final userId = Provider.of<UserProvider>(context, listen: false).userId;
+    if (userId != null) {
+      setState(() {
+        _checkoutInfoFuture = ApiConnection().fetchCheckoutInfo(userId);
+        _cartItemsFuture = ApiConnection().fetchCartItems(userId);
+      });
+    }
+  }
+
+  Future<void> _refreshData() async {
+    _loadData();
+    await _checkoutInfoFuture;
+    await _cartItemsFuture;
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Important Information'),
+        content: Text('Please make sure to fill out both billing and shipping addresses to ensure timely delivery.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _validateAndProceed(BuildContext context, CheckoutInfo info, List<CartItem> cartItems) {
+    print('Validating checkout info...');
+    print('First Name: ${info.firstName}');
+    print('Last Name: ${info.lastName}');
+    print('Email: ${info.email}');
+    print('Billing Name: ${info.billingName}');
+    print('Billing Address: ${info.billingAddress}');
+    print('Billing City: ${info.billingCity}');
+    print('Billing State: ${info.billingState}');
+    print('Billing Country: ${info.billingCountry}');
+    print('Shipping First Name: ${info.shippingFirstName}');
+    print('Shipping Last Name: ${info.shippingLastName}');
+    print('Shipping Address: ${info.shippingAddress}');
+    print('Shipping City: ${info.shippingCity}');
+    print('Shipping State: ${info.shippingState}');
+    print('Shipping Country: ${info.shippingCountry}');
+    print('Cart Items: ${cartItems.length}');
+
+    if (info.firstName.isEmpty ||
+        info.lastName.isEmpty ||
+        info.email.isEmpty ||
+        info.billingName == null ||
+        info.billingAddress == null ||
+        info.billingCity == null ||
+        info.billingState == null ||
+        info.billingCountry == null ||
+        info.shippingFirstName == null ||
+        info.shippingLastName == null ||
+        info.shippingAddress == null ||
+        info.shippingCity == null ||
+        info.shippingState == null ||
+        info.shippingCountry == null ||
+        cartItems.isEmpty) {
+      print('Validation failed: Missing required information.');
+      _showMissingInfoDialog(context);
+    } else {
+      print('Validation succeeded: Proceeding to order confirmation.');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OrderConfirmationScreen(
+            orderId: '12345', // Pass your actual order ID here
+            totalAmount: _totalAmount.toStringAsFixed(2),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showMissingInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Missing Information'),
+        content: Text('Please make sure all information is entered before proceeding.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,283 +149,83 @@ class CheckoutScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInformationTile(context, 'My Information', 'Malcolm Clottey', 'clatteymolcolm4@gmail.com', MyInformationScreen()),
-            _buildInformationTile(context, 'Billing address', 'Malcolm Clottey', '9516 Fall Haven Rd\nFredericksburg Virginia\n22407-9264\nUSA', BillingAddressScreen()),
-            _buildInformationTile(context, 'Shipping', 'Malcolm Clottey', '+1 5714614899', ShippingAddressScreen()),
-            _buildPackageDetails(context),
-            _buildSummary(),
-            _buildPaymentTile(context),
-            _buildTotal(),
-            _buildCheckoutButton(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInformationTile(BuildContext context, String title, String name, String details, Widget screen) {
-    return ListTile(
-      title: Text(
-        title,
-        style: TextStyle(
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      subtitle: Text('$name\n$details'),
-      trailing: Icon(Icons.arrow_forward_ios, color: Colors.black),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => screen),
-        );
-      },
-    );
-  }
-
-  Widget _buildPackageDetails(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(color: Color(0xFF69734E)),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Package',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Order ID: 1234567890',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    color: Color(0xFF69734E),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    'https://via.placeholder.com/100x150',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    'https://via.placeholder.com/100x150',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    'https://via.placeholder.com/100x150',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.info_outline, color: Colors.black),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => OrderDetailsPage(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Malcolm Clottey\n9516 Fall Haven Rd\nFredericksburg Virginia\n22407-9264\nUSA',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('\$5.99', style: TextStyle(fontFamily: 'Poppins')),
-                Text('Standard Delivery', style: TextStyle(fontFamily: 'Poppins')),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummary() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Divider(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Order value',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              '\$24.99',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Delivery fee',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-              ),
-            ),
-            Text(
-              '\$5.99',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Est. taxes',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-              ),
-            ),
-            Text(
-              '\$1.64',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
-        ),
-        Divider(),
-      ],
-    );
-  }
-
-  Widget _buildPaymentTile(BuildContext context) {
-    return ListTile(
-      title: Text(
-        'Payment',
-        style: TextStyle(
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      trailing: Icon(Icons.arrow_forward_ios, color: Colors.black),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => PaymentScreen(totalAmount: '\$32.62')),
-        );
-      },
-    );
-  }
-
-  Widget _buildTotal() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Total',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            '\$32.62',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCheckoutButton(BuildContext context) {
-    return Center(
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF69734E),
-          padding: EdgeInsets.symmetric(horizontal: 80, vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OrderConfirmationScreen(totalAmount: '\$32.62'),
-            ),
-          );
-        },
-        child: Text(
-          'Place Order',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-            fontSize: 16,
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: FutureBuilder<CheckoutInfo>(
+            future: _checkoutInfoFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                print('Error loading checkout info: ${snapshot.error}');
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (!snapshot.hasData) {
+                return Center(child: Text('No data available'));
+              } else {
+                final info = snapshot.data!;
+                print('Checkout Info loaded: $info');
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InformationTile(
+                      title: 'My Information',
+                      name: '${info.firstName} ${info.lastName}',
+                      details: info.email,
+                      screen: MyInformationScreen(),
+                    ),
+                    InformationTile(
+                      title: 'Billing Address',
+                      name: info.billingName ?? '',
+                      details: '${info.billingAddress ?? ''}\n${info.billingCity ?? ''}\n${info.billingState ?? ''}\n${info.billingCountry ?? ''}',
+                      screen: BillingAddressScreen(),
+                    ),
+                    InformationTile(
+                      title: 'Shipping',
+                      name: '${info.shippingFirstName ?? ''} ${info.shippingLastName ?? ''}',
+                      details: '${info.shippingAddress ?? ''}\n${info.shippingCity ?? ''}\n${info.shippingState ?? ''}\n${info.shippingCountry ?? ''}',
+                      screen: ShippingAddressScreen(),
+                    ),
+                    FutureBuilder<List<CartItem>>(
+                      future: _cartItemsFuture,
+                      builder: (context, cartSnapshot) {
+                        if (cartSnapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (cartSnapshot.hasError) {
+                          print('Error loading cart items: ${cartSnapshot.error}');
+                          return Center(child: Text('Error: ${cartSnapshot.error}'));
+                        } else if (!cartSnapshot.hasData || cartSnapshot.data!.isEmpty) {
+                          return Center(child: Text('Your cart is empty'));
+                        } else {
+                          final cartItems = cartSnapshot.data!;
+                          print('Cart Items loaded: $cartItems');
+                          final double orderValue = cartItems.fold(0.0, (sum, item) => sum + item.price);
+                          final double deliveryFee = 5.99;
+                          final double estimatedTaxes = orderValue * 0.1;
+                          final double totalAmount = orderValue + deliveryFee + estimatedTaxes;
+                          _totalAmount = totalAmount;
+                          return Column(
+                            children: [
+                              PackageDetails(cartItems: cartItems),
+                              Summary(orderValue: orderValue, deliveryFee: deliveryFee, estimatedTaxes: estimatedTaxes),
+                              Total(totalAmount: totalAmount),
+                              CheckoutButton(
+                                totalAmount: totalAmount,
+                                onPressed: () => _validateAndProceed(context, info, cartItems),
+                              ),
+                            ],
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                );
+              }
+            },
           ),
         ),
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: CheckoutScreen(),
-  ));
 }

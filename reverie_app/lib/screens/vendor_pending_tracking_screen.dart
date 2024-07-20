@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../services/api_connection.dart';
 
-class VendorPendingTrackingScreen extends StatelessWidget {
+class VendorPendingTrackingScreen extends StatefulWidget {
   final String orderId;
   final String items;
   final String pickupStatus;
@@ -14,75 +17,126 @@ class VendorPendingTrackingScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    int statusIndex;
-    if (pickupStatus == 'Ready') {
-      statusIndex = 0;
-    } else if (pickupStatus == 'Picked Up') {
-      statusIndex = 1;
-    } else if (pickupStatus == 'Delivered') {
-      statusIndex = 2;
-    } else {
-      statusIndex = -1; // Default case
-    }
+  _VendorPendingTrackingScreenState createState() => _VendorPendingTrackingScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: Color(0xFFDDDBD3),
-      appBar: AppBar(
-        backgroundColor: Color(0xFFDDDBD3),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: Text(
-          'Tracking Details',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildOrderSummary(),
-            SizedBox(height: 20),
-            _buildOrderInfo(orderId),
-            SizedBox(height: 20),
-            _buildItemsInfo(items),
-            SizedBox(height: 20),
-            _buildPickupStatus(statusIndex),
-          ],
-        ),
-      ),
+class _VendorPendingTrackingScreenState extends State<VendorPendingTrackingScreen> {
+  late Future<Map<String, dynamic>> _trackingDetailsFuture;
+
+  Future<Map<String, dynamic>> fetchTrackingDetails(String orderId) async {
+    final apiConnection = ApiConnection();
+    return await apiConnection.fetchVendorTracking(orderId);
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _trackingDetailsFuture = fetchTrackingDetails(widget.orderId);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _trackingDetailsFuture = fetchTrackingDetails(widget.orderId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _trackingDetailsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: Color(0xFFDDDBD3),
+            appBar: AppBar(
+              backgroundColor: Color(0xFF69734E),
+              title: Text(
+                'Tracking Details',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                ),
+              ),
+              centerTitle: true,
+            ),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        } else if (snapshot.hasError) {
+          print('Error in snapshot: ${snapshot.error}');
+          return Scaffold(
+            backgroundColor: Color(0xFFDDDBD3),
+            appBar: AppBar(
+              backgroundColor: Color(0xFF69734E),
+              title: Text(
+                'Tracking Details',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                ),
+              ),
+              centerTitle: true,
+            ),
+            body: Center(child: Text('Error fetching tracking details')),
+          );
+        } else {
+          final trackingDetails = snapshot.data!;
+          return Scaffold(
+            backgroundColor: Color(0xFFDDDBD3),
+            appBar: AppBar(
+              backgroundColor: Color(0xFF69734E),
+              title: Text(
+                'Tracking Details',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                ),
+              ),
+              centerTitle: true,
+            ),
+            body: RefreshIndicator(
+              onRefresh: _refreshData,
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildOrderSummary(trackingDetails),
+                    SizedBox(height: 20),
+                    _buildOrderInfo(widget.orderId),
+                    SizedBox(height: 20),
+                    _buildItemsInfo(trackingDetails['items']),
+                    SizedBox(height: 20),
+                    _buildPickupStatus(trackingDetails['status'], trackingDetails['estimated_delivery_date']),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 
-  Widget _buildOrderSummary() {
+  Widget _buildOrderSummary(Map<String, dynamic> trackingDetails) {
     return Column(
       children: [
         Center(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              'assets/men.png', // Replace with the image asset for the item
+            child: Image.network(
+              trackingDetails['items'][0]['imageUrl'],
               width: 100,
               height: 100,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Icon(Icons.error), // handle error case
             ),
           ),
         ),
         SizedBox(height: 10),
         Center(
           child: Text(
-            'Men Graphic Tee',
+            trackingDetails['items'][0]['name'],
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 18,
@@ -92,11 +146,9 @@ class VendorPendingTrackingScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: 10),
-        
-        SizedBox(height: 10),
         Center(
           child: Text(
-            'To Ahmed',
+            'To Ahmed', // This should be dynamic based on your data
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 14,
@@ -107,7 +159,7 @@ class VendorPendingTrackingScreen extends StatelessWidget {
         SizedBox(height: 20),
         Center(
           child: Text(
-            'Estimated day of delivery: $estimatedDeliveryDate',
+            'Estimated day of delivery: ${trackingDetails['estimated_delivery_date']}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 14,
@@ -136,37 +188,48 @@ class VendorPendingTrackingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemsInfo(String items) {
+  Widget _buildItemsInfo(List<dynamic> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Item(s): $items',
+          'Item(s):',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 16,
             color: Colors.black,
           ),
         ),
+        ...items.map((item) => _buildOrderItem(item['name'], item['imageUrl'], item['price'])).toList(),
       ],
     );
   }
 
-  Widget _buildPickupStatus(int statusIndex) {
+  Widget _buildPickupStatus(String status, String estimatedDeliveryDate) {
     List<String> statuses = ['Ready', 'Picked Up', 'Delivered'];
     List<String> descriptions = [
       'Your item is ready for pickup.',
       'Your item has been picked up.',
       'Your item has been delivered.'
     ];
-  
+
+    int statusIndex;
+    if (status == 'Ready') {
+      statusIndex = 0;
+    } else if (status == 'Picked Up') {
+      statusIndex = 1;
+    } else if (status == 'Delivered') {
+      statusIndex = 2;
+    } else {
+      statusIndex = -1; // Default case
+    }
+
     return Column(
-      
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 15),
         Text(
-          'Pickup Status:',
+          'Delivery Status:',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 16,
@@ -183,8 +246,7 @@ class VendorPendingTrackingScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 5,
-                      backgroundColor:
-                          statusIndex >= index ? Color(0xFF69734E) : Colors.grey,
+                      backgroundColor: statusIndex >= index ? Color(0xFF69734E) : Colors.grey,
                     ),
                     if (index != statuses.length - 1)
                       Container(
@@ -222,6 +284,53 @@ class VendorPendingTrackingScreen extends StatelessWidget {
           }),
         ),
       ],
+    );
+  }
+
+  Widget _buildOrderItem(String name, String imageUrl, String price) {
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.symmetric(vertical: 8.0),
+      color: Color(0xFFDDDBD3),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: Color(0xFF69734E)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                imageUrl,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Icon(Icons.error), // handle error case
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF69734E),
+                ),
+              ),
+            ),
+            Text(
+              price,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                color: Color(0xFF69734E),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

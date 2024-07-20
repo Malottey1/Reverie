@@ -1,7 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/api_connection.dart';
 import 'store.dart'; // Import the Store screen
 
-class StoreListScreen extends StatelessWidget {
+class StoreListScreen extends StatefulWidget {
+  @override
+  _StoreListScreenState createState() => _StoreListScreenState();
+}
+
+class _StoreListScreenState extends State<StoreListScreen> {
+  List<Map<String, dynamic>> _stores = [];
+  bool _isLoading = true;
+  final String baseUrl = "https://reverie.newschateau.com/api/reverie/profile-photos/"; // Base URL for images
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStores();
+  }
+
+  Future<void> _fetchStores() async {
+    try {
+      List<dynamic> results = await ApiConnection().fetchStores();
+      setState(() {
+        _stores = results.cast<Map<String, dynamic>>().map((store) {
+          // Ensure vendor_id is parsed as an int
+          return {
+            'vendor_id': int.parse(store['vendor_id']),
+            'profile_photo': store['profile_photo'],
+            'business_name': store['business_name'],
+            'business_description': store['business_description'],
+          };
+        }).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load stores: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,49 +67,33 @@ class StoreListScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildStoreItem(
-            context,
-            'assets/store1.png',
-            'The RealReal',
-            'Dresses, Tops, Accessories',
-          ),
-          _buildStoreItem(
-            context,
-            'assets/store2.png',
-            'Nike',
-            'Sneakers, Sandals, Boots',
-          ),
-          _buildStoreItem(
-            context,
-            'assets/store3.png',
-            'Reformation',
-            'Dresses, Tops, Bottoms',
-          ),
-          _buildStoreItem(
-            context,
-            'assets/store4.png',
-            'Levi\'s',
-            'Dresses, Tops, Jeans',
-          ),
-          _buildStoreItem(
-            context,
-            'assets/store5.png',
-            'Everlane',
-            'Tops, Dresses, Skirts',
-          ),
-        ],
-      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: _stores.length,
+              itemBuilder: (context, index) {
+                final store = _stores[index];
+                return _buildStoreItem(
+                  context,
+                  store['vendor_id'],
+                  store['profile_photo'] ?? '',
+                  store['business_name'] ?? 'Store Name',
+                  store['business_description'] ?? 'Store Description',
+                );
+              },
+            ),
     );
   }
 
-  Widget _buildStoreItem(BuildContext context, String imagePath, String title, String subtitle) {
+  Widget _buildStoreItem(BuildContext context, int vendorId, String imagePath, String title, String subtitle) {
+    String fullImagePath = imagePath.isNotEmpty ? baseUrl + imagePath : 'assets/placeholder.png';
     return ListTile(
       leading: CircleAvatar(
         radius: 30,
-        backgroundImage: AssetImage(imagePath),
+        backgroundImage: fullImagePath.startsWith('http')
+            ? NetworkImage(fullImagePath)
+            : AssetImage(fullImagePath) as ImageProvider,
       ),
       title: Text(
         title,
@@ -89,8 +115,7 @@ class StoreListScreen extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => StoreScreen(
-              storeName: title,
-              storeDescription: subtitle,
+              vendorId: vendorId,
             ),
           ),
         );

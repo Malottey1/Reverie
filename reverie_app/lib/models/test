@@ -1,0 +1,15 @@
+class OrderDetail {
+  final String productName;
+  final String productImage;
+  final double price;
+
+  OrderDetail({required this.productName, required this.productImage, required this.price});
+
+  factory OrderDetail.fromJson(Map<String, dynamic> json) {
+    return OrderDetail(
+      productName: json['product_name'],
+      productImage: json['product_image'],
+      price: json['price'].toDouble(),
+    );
+  }
+}

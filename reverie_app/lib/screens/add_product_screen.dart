@@ -1,7 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../controllers/add_product_controller.dart';
 
 class AddProductScreen extends StatefulWidget {
   @override
@@ -9,52 +10,13 @@ class AddProductScreen extends StatefulWidget {
 }
 
 class _AddProductScreenState extends State<AddProductScreen> {
-  final List<String> categories = ['Tops', 'Bottoms', 'Dresses', 'Outerwear', 'Accessories'];
-  final List<String> sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-  final List<String> conditions = ['New with Tags', 'Excellent', 'Very Good', 'Good', 'Fair'];
-  final List<String> genders = ['Male', 'Female', 'Unisex'];
   final ImagePicker _picker = ImagePicker();
   XFile? _image;
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await showModalBottomSheet<XFile>(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(Icons.photo_camera),
-                title: Text('Take a Photo'),
-                onTap: () async {
-                  final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
-                  Navigator.pop(context, pickedFile);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Choose from Gallery'),
-                onTap: () async {
-                  final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-                  Navigator.pop(context, pickedFile);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (pickedFile != null) {
-      setState(() {
-        _image = pickedFile;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final AddProductController _controller = Provider.of<AddProductController>(context);
+
     return Scaffold(
       backgroundColor: Color(0xFFDDDBD3),
       appBar: AppBar(
@@ -83,7 +45,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
-                onTap: _pickImage,
+                onTap: () async {
+                  final pickedFile = await _pickImage();
+                  if (pickedFile != null) {
+                    setState(() {
+                      _image = pickedFile;
+                    });
+                    _controller.setImagePath(pickedFile.path);
+                  }
+                },
                 child: Row(
                   children: [
                     Container(
@@ -127,21 +97,27 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   ),
                 ),
               SizedBox(height: 20),
-              _buildTextField('Title'),
-              _buildTextField('Description', isMultiline: true),
-              _buildDropdown('Category', categories),
-              _buildTextField('Brand (Optional)'),
-              _buildDropdown('Size', sizes),
-              _buildTextField('Color'),
-              _buildDropdown('Condition', conditions),
-              _buildDropdown('Gender Preference', genders),
-              _buildTextField('Price'),
+              _buildTextField('Title', _controller.titleController),
+              _buildTextField('Description', _controller.descriptionController, isMultiline: true),
+              _buildDropdown('Category', ['Tops', 'Bottoms', 'Dresses', 'Outerwear', 'Accessories'], (String? newValue) {
+                _controller.setCategory(newValue!);
+              }),
+              _buildTextField('Brand (Optional)', _controller.brandController),
+              _buildDropdown('Size', ['XS', 'S', 'M', 'L', 'XL', 'XXL'], (String? newValue) {
+                _controller.setSize(newValue!);
+              }),
+              _buildTextField('Color', _controller.colorController),
+              _buildDropdown('Condition', ['New with Tags', 'Excellent', 'Very Good', 'Good', 'Fair'], (String? newValue) {
+                _controller.setCondition(newValue!);
+              }),
+              _buildDropdown('Target Group', ['Men', 'Women', 'Kids'], (String? newValue) {
+                _controller.setTargetGroup(newValue!);
+              }),
+              _buildTextField('Price', _controller.priceController),
               SizedBox(height: 20),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Handle save and publish action
-                  },
+                  onPressed: () => _controller.saveAndPublish(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF69734E),
                     padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
@@ -166,10 +142,42 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  Widget _buildTextField(String hint, {bool isMultiline = false}) {
+  Future<XFile?> _pickImage() async {
+    return await showModalBottomSheet<XFile>(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.photo_camera),
+                title: Text('Take a Photo'),
+                onTap: () async {
+                  final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+                  Navigator.pop(context, pickedFile);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('Choose from Gallery'),
+                onTap: () async {
+                  final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+                  Navigator.pop(context, pickedFile);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTextField(String hint, TextEditingController controller, {bool isMultiline = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
+        controller: controller,
         maxLines: isMultiline ? null : 1,
         decoration: InputDecoration(
           hintText: hint,
@@ -188,7 +196,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  Widget _buildDropdown(String hint, List<String> items) {
+  Widget _buildDropdown(String hint, List<String> items, void Function(String?) onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: DropdownButtonFormField<String>(
@@ -216,9 +224,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             ),
           );
         }).toList(),
-        onChanged: (_) {
-          // Handle dropdown value change
-        },
+        onChanged: onChanged,
       ),
     );
   }
