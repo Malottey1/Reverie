@@ -1,6 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class MyInformationScreen extends StatelessWidget {
+import '../providers/user_provider.dart';
+
+class MyInformationScreen extends StatefulWidget {
+  @override
+  _MyInformationScreenState createState() => _MyInformationScreenState();
+}
+
+class _MyInformationScreenState extends State<MyInformationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
+  late TextEditingController _emailController;
+
+  @override
+  void initState() {
+    super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    _firstNameController = TextEditingController(text: userProvider.firstName);
+    _lastNameController = TextEditingController(text: userProvider.lastName);
+    _emailController = TextEditingController(text: userProvider.email);
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveInformation() async {
+    if (_formKey.currentState!.validate()) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final response = await http.post(
+        Uri.parse('https://yourapiurl.com/update_user_info.php'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'user_id': userProvider.userId,
+          'first_name': _firstNameController.text,
+          'last_name': _lastNameController.text,
+          'email': _emailController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        if (result['message'] == 'User info updated successfully') {
+          userProvider.setUserInfo(
+            _firstNameController.text,
+            _lastNameController.text,
+            _emailController.text,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'])),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update information')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,29 +93,29 @@ class MyInformationScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildTextField('Email', 'clatteymolcolm4@gmail.com'),
-            _buildTextField('First name', 'Malcolm'),
-            _buildTextField('Last name', 'Clottey'),
-            _buildTextField('Date of birth', '03/09/2003'),
-            _buildTextField('Phone number', '+1 3014589407'),
-            _buildTextField('Market', 'United States'),
-            SizedBox(height: 20),
-            _buildSaveButton(context),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _buildTextField('First Name', _firstNameController),
+              _buildTextField('Last Name', _lastNameController),
+              _buildTextField('Email', _emailController),
+              SizedBox(height: 20),
+              _buildSaveButton(context),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, String initialValue) {
+  Widget _buildTextField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
-        initialValue: initialValue,
+        controller: controller,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
@@ -56,6 +125,12 @@ class MyInformationScreen extends StatelessWidget {
             borderSide: BorderSide(color: Colors.black),
           ),
         ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return '$label cannot be empty';
+          }
+          return null;
+        },
       ),
     );
   }
@@ -69,9 +144,7 @@ class MyInformationScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
       ),
-      onPressed: () {
-        Navigator.pop(context);
-      },
+      onPressed: _saveInformation,
       child: Text(
         'Save',
         style: TextStyle(

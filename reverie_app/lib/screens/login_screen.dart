@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+import 'package:reverie_app/routes/slide_left_route.dart';
+import 'package:reverie_app/screens/onboarding_screen.dart';
 import '../routes/slide_right_route.dart';
 import 'register_screen.dart';
+import '../controllers/login_controller.dart';
+import '../widgets/custom_text_field.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final LoginController _controller = LoginController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +33,7 @@ class LoginScreen extends StatelessWidget {
               children: <Widget>[
                 Image.asset(
                   'assets/reverie-logo.png',
-                  height: 40, 
+                  height: 40,
                 ),
                 SizedBox(height: 8),
                 Text(
@@ -38,9 +54,16 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 24),
-                _buildTextField('Email or Username'),
+                CustomTextField(
+                  hintText: 'Email',
+                  controller: _controller.emailController,
+                ),
                 SizedBox(height: 16),
-                _buildTextField('Password', obscureText: true),
+                CustomTextField(
+                  hintText: 'Password',
+                  controller: _controller.passwordController,
+                  obscureText: true,
+                ),
                 SizedBox(height: 24),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -49,13 +72,10 @@ class LoginScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 162, vertical: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 140, vertical: 10),
                   ),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                    );
+                    _controller.login(context);
                   },
                   child: Text(
                     'Sign In',
@@ -69,7 +89,7 @@ class LoginScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      SlideRightRoute(page: RegisterScreen()),
+                      SlideLeftRoute(page: OnboardingScreen()),
                     );
                   },
                   child: Padding(
@@ -89,25 +109,6 @@ class LoginScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(String hintText, {bool obscureText = false}) {
-    return TextField(
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: TextStyle(
-          fontFamily: 'Poppins',
-        ),
-        filled: true,
-        fillColor: Color(0xFFB0BEC5),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }

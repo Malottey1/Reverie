@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'product_details_screen.dart';
+import '../services/api_connection.dart';
 
 class ProductResultsScreen extends StatelessWidget {
-  final String category;
+  final String searchQuery;
 
-  ProductResultsScreen({required this.category});
+  ProductResultsScreen({required this.searchQuery});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +21,7 @@ class ProductResultsScreen extends StatelessWidget {
           },
         ),
         title: Text(
-          category,
+          searchQuery,
           style: TextStyle(
             fontFamily: 'Poppins',
             color: Color(0xFF69734E),
@@ -30,66 +32,25 @@ class ProductResultsScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildFilterSortOptions(context),
-            SizedBox(height: 20),
-            Expanded(
-              child: _buildProductGrid(),
-            ),
-          ],
+        child: FutureBuilder<List<dynamic>>(
+          future: ApiConnection().searchProducts(searchQuery),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Failed to load search results: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No results found.'));
+            } else {
+              return _buildProductGrid(context, snapshot.data!);
+            }
+          },
         ),
       ),
     );
   }
 
-  Widget _buildFilterSortOptions(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        DropdownButton<String>(
-          value: 'Department',
-          icon: Icon(Icons.arrow_downward),
-          iconSize: 24,
-          elevation: 16,
-          style: TextStyle(
-            color: Color(0xFF69734E),
-            fontFamily: 'Poppins',
-          ),
-          underline: Container(
-            height: 2,
-            color: Color(0xFF69734E),
-          ),
-          onChanged: (String? newValue) {},
-          items: <String>['Department', 'Men', 'Women', 'Kids', 'Shoes', 'Bags', 'Watches']
-              .map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
-        ),
-        PopupMenuButton<String>(
-          icon: Icon(Icons.filter_list, color: Color(0xFF69734E)),
-          onSelected: (String value) {
-            // Handle sort action
-          },
-          itemBuilder: (BuildContext context) {
-            return {'Low to High', 'High to Low', 'Newest Arrivals', 'Oldest Listings', 'Brand (A-Z)', 'Brand (Z-A)'}
-                .map((String choice) {
-              return PopupMenuItem<String>(
-                value: choice,
-                child: Text(choice),
-              );
-            }).toList();
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProductGrid() {
+  Widget _buildProductGrid(BuildContext context, List<dynamic> products) {
     return GridView.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -97,66 +58,94 @@ class ProductResultsScreen extends StatelessWidget {
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
-      itemCount: 8,
+      itemCount: products.length,
       itemBuilder: (BuildContext context, int index) {
-        return _buildProductItem();
+        final product = products[index];
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetailsScreen(
+                  product: {
+                    'product_id': product['product_id'],
+                    'title': product['title'],
+                    'price': product['price'],
+                    'old_price': product['old_price'],
+                    'image_url': 'https://reverie.newschateau.com/api/reverie/product-images/' + product['image_path'],
+                    'description': product['description'],
+                    'size_name': product['size_name'],
+                    'brand': product['brand'],
+                    'condition_name': product['condition_name'],
+                  },
+                ),
+              ),
+            );
+          },
+          child: _buildProductItem(product),
+        );
       },
     );
   }
 
-  Widget _buildProductItem() {
+  Widget _buildProductItem(dynamic product) {
+    String imageUrl = product['image_path'];
+    if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
+      imageUrl = 'https://reverie.newschateau.com/api/reverie/product-images/' + imageUrl; 
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Color(0xFFDDDBD3),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 4,
+            offset: Offset(2, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
-            children: [
-              ClipRRect(
-                child: Image.asset(
-                  'assets/men.png',
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            child: Image.network(
+              imageUrl,
+              width: double.infinity,
+              height: 150, // Reduced height
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
                   width: double.infinity,
-                  height: 172,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  color: Colors.red,
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Text(
-                    '-72%',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
+                  height: 150, // Reduced height
+                  color: Colors.grey,
+                  child: Center(
+                    child: Icon(Icons.image, color: Colors.white),
                   ),
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              'Regular Fit Cotton Shorts',
+              product['title'],
               style: TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: 12,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
               overflow: TextOverflow.ellipsis,
-              maxLines: 2,
+              maxLines: 1, // Reduced maxLines
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
-              '\$4.99',
+              '\GHS ${product['price']}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
@@ -165,18 +154,19 @@ class ProductResultsScreen extends StatelessWidget {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text(
-              '\$17.99',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 12,
-                color: Colors.grey,
-                decoration: TextDecoration.lineThrough,
+          if (product['original_price'] != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                '\GHS ${product['original_price']}',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  color: Colors.grey,
+                  decoration: TextDecoration.lineThrough,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

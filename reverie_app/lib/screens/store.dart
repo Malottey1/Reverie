@@ -1,10 +1,45 @@
 import 'package:flutter/material.dart';
+import '../services/api_connection.dart';
+import 'product_details_screen.dart'; // Import ProductDetailsScreen
 
-class StoreScreen extends StatelessWidget {
-  final String storeName;
-  final String storeDescription;
+class StoreScreen extends StatefulWidget {
+  final int vendorId;
 
-  StoreScreen({required this.storeName, required this.storeDescription});
+  StoreScreen({required this.vendorId});
+
+  @override
+  _StoreScreenState createState() => _StoreScreenState();
+}
+
+class _StoreScreenState extends State<StoreScreen> {
+  List<Map<String, dynamic>> _products = [];
+  Map<String, dynamic>? _vendorDetails;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchVendorDetailsAndProducts();
+  }
+
+  Future<void> _fetchVendorDetailsAndProducts() async {
+    try {
+      final vendorDetails = await ApiConnection().fetchVendorDetails(widget.vendorId);
+      final products = await ApiConnection().fetchProductsByVendor(widget.vendorId);
+      setState(() {
+        _vendorDetails = vendorDetails;
+        _products = products.cast<Map<String, dynamic>>();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load vendor details and products: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,111 +60,82 @@ class StoreScreen extends StatelessWidget {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Icon(Icons.star_border, color: Color(0xFF69734E)),
-            onPressed: () {
-              // Implement add product functionality here
-            },
-          ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Center(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.grey,
-                      child: CircleAvatar(
-                        radius: 38,
-                        backgroundColor: Colors.white,
-                        child: Text(
-                          storeName,
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      storeName,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    Text(
-                      storeDescription,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTabButton(context, 'Overview'),
-                  _buildTabButton(context, 'Collection'),
-                  _buildTabButton(context, 'Blog'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Center(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.grey,
+                            backgroundImage: _vendorDetails?['profile_photo'] != null
+                                ? NetworkImage('https://reverie.newschateau.com/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
+                                : null,
+                            child: _vendorDetails?['profile_photo'] == null
+                                ? CircleAvatar(
+                                    radius: 38,
+                                    backgroundColor: Colors.white,
+                                    child: Text(
+                                      _vendorDetails?['business_name']?.substring(0, 1) ?? '',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            _vendorDetails?['business_name'] ?? 'Store',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                            'Verified official store',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildTabButton(context, 'Overview'),
+                        _buildTabButton(context, 'Collection'),
+                        _buildTabButton(context, 'Blog'),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  _buildSectionHeader(context, 'Peak of our new collection'),
+                  SizedBox(height: 10),
+                  _buildProductGrid(context),
+                  SizedBox(height: 10),
                 ],
               ),
             ),
-            SizedBox(height: 10),
-            _buildSectionHeader(context, 'Peak of our new collection'),
-            SizedBox(height: 10),
-            _buildProductGrid(),
-            SizedBox(height: 10),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Color(0xFFDDDBD3),
-        selectedItemColor: Color(0xFF69734E),
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        onTap: (index) {
-          // Handle navigation here
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/inventory.png')), // Custom inventory icon
-            label: 'Inventory',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
-            label: 'Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Me',
-          ),
-        ],
-      ),
     );
   }
 
@@ -164,41 +170,57 @@ class StoreScreen extends StatelessWidget {
               color: Colors.black,
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.arrow_forward, color: Colors.black),
-            onPressed: () {
-              // Handle navigation to collection
-            },
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildProductGrid() {
+  Widget _buildProductGrid(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: GridView.builder(
         physics: NeverScrollableScrollPhysics(),
         shrinkWrap: true,
+        itemCount: _products.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.75,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+          crossAxisSpacing: 16.0,
+          mainAxisSpacing: 16.0,
+          childAspectRatio: 0.7,
         ),
-        itemCount: 8,
         itemBuilder: (BuildContext context, int index) {
-          return _buildProductItem();
+          final product = _products[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailsScreen(product: {
+                    ...product,
+                    'image_url': 'https://reverie.newschateau.com/api/reverie/product-images/' + (product['image_path'] ?? ''),
+                  }),
+                ),
+              );
+            },
+            child: _buildProductItem(
+              context,
+              product['title'],
+              '\GHS${product['price']}',
+              product['old_price'] != null ? '\GHS ${product['old_price']}' : '',
+              product['is_on_sale'] == 1,
+              product['image_path'],
+            ),
+          );
         },
       ),
     );
   }
 
-  Widget _buildProductItem() {
+  Widget _buildProductItem(BuildContext context, String title, String price, String oldPrice, bool isOnSale, String imagePath) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFFDDDBD3),
+        color: Color(0xFFDDDBD3), // Background color as specified
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,36 +228,51 @@ class StoreScreen extends StatelessWidget {
           Stack(
             children: [
               ClipRRect(
-                child: Image.asset(
-                  'assets/men.png',
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(10),
+                  topRight: Radius.circular(10),
+                ),
+                child: Image.network(
+                  'https://reverie.newschateau.com/api/reverie/product-images/' + imagePath,
                   width: double.infinity,
                   height: 172,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: double.infinity,
+                      height: 172,
+                      color: Colors.grey,
+                      child: Center(
+                        child: Icon(Icons.image, color: Colors.white),
+                      ),
+                    );
+                  },
                 ),
               ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  color: Colors.red,
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Text(
-                    '-72%',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      color: Colors.white,
-                      fontSize: 12,
+              if (isOnSale)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    color: Colors.red,
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text(
+                      '-72%', // Discount percentage placeholder
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              'Regular Fit Cotton Shorts',
-              style: TextStyle(
+              title,
+                            style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12,
                 color: Colors.black,
@@ -247,7 +284,7 @@ class StoreScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
-              '\$4.99',
+              price,
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
@@ -256,27 +293,21 @@ class StoreScreen extends StatelessWidget {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text(
-              '\$17.99',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 12,
-                color: Colors.grey,
-                decoration: TextDecoration.lineThrough,
+          if (oldPrice.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                oldPrice,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  color: Colors.grey,
+                  decoration: TextDecoration.lineThrough,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
   }
 }
-
-void main() => runApp(MaterialApp(
-  home: StoreScreen(
-    storeName: 'Bershka',
-    storeDescription: 'Verified official store',
-  ),
-));

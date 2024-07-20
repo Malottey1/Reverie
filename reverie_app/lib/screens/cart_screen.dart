@@ -1,7 +1,68 @@
 import 'package:flutter/material.dart';
-import 'checkout_screen.dart'; 
+import 'package:provider/provider.dart';
+import 'checkout_screen.dart';
+import '../models/cart_item.dart';
+import '../services/api_connection.dart';
+import '../providers/user_provider.dart';
+import 'package:art_sweetalert/art_sweetalert.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
+  @override
+  _CartScreenState createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  late Future<List<CartItem>> _cartItemsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final userId = Provider.of<UserProvider>(context, listen: false).userId;
+    if (userId != null) {
+      _cartItemsFuture = ApiConnection().fetchCartItems(userId);
+    }
+  }
+
+  Future<void> _handleRemoveCartItem(int cartId) async {
+    try {
+      final response = await ApiConnection().removeCartItem(cartId);
+      _showSuccessDialog(context, response['message']);
+      setState(() {
+        final userId = Provider.of<UserProvider>(context, listen: false).userId;
+        if (userId != null) {
+          _cartItemsFuture = ApiConnection().fetchCartItems(userId);
+        }
+      });
+    } catch (e) {
+      print('Error removing cart item: $e');
+      _showErrorDialog(context, 'Failed to remove cart item');
+    }
+  }
+
+  void _showSuccessDialog(BuildContext context, String message) {
+    ArtSweetAlert.show(
+      context: context,
+      artDialogArgs: ArtDialogArgs(
+        type: ArtSweetAlertType.success,
+        title: "Success",
+        text: message,
+        confirmButtonText: "Okay",
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    ArtSweetAlert.show(
+      context: context,
+      artDialogArgs: ArtDialogArgs(
+        type: ArtSweetAlertType.danger,
+        title: "Error",
+        text: message,
+        confirmButtonText: "Okay",
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,7 +84,20 @@ class CartScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _buildCartItemsList(),
+              child: FutureBuilder<List<CartItem>>(
+                future: _cartItemsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return _buildEmptyCart();
+                  } else {
+                    return _buildCartItemsList(snapshot.data!);
+                  }
+                },
+              ),
             ),
             _buildCartSummary(),
             _buildCheckoutButton(context),
@@ -33,16 +107,40 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCartItemsList() {
+  Widget _buildEmptyCart() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/empty-cart.png',
+            width: 150,
+            height: 150,
+          ),
+          SizedBox(height: 20),
+          Text(
+            'Your cart is empty',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 18,
+              color: Colors.black54,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCartItemsList(List<CartItem> cartItems) {
     return ListView.builder(
-      itemCount: 2, // Example item count, replace with dynamic count
+      itemCount: cartItems.length,
       itemBuilder: (context, index) {
-        return _buildCartItem();
+        return _buildCartItem(cartItems[index]);
       },
     );
   }
 
-  Widget _buildCartItem() {
+  Widget _buildCartItem(CartItem cartItem) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: const EdgeInsets.all(16.0),
@@ -59,7 +157,7 @@ class CartScreen extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Image.network(
-              'https://via.placeholder.com/100x150',
+              cartItem.imageUrl,
               width: 80,
               height: 80,
               fit: BoxFit.cover,
@@ -71,7 +169,7 @@ class CartScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Everlane Twisted detail long sleeve dress',
+                  cartItem.title,
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 16,
@@ -80,7 +178,7 @@ class CartScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '\$276',
+                  '\GHS ${cartItem.price}',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 16,
@@ -88,36 +186,12 @@ class CartScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Size: M',
+                  'Size: ${cartItem.size}',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
                     color: Colors.black54,
                   ),
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.remove_circle, color: Color(0xFF69734E)),
-                      onPressed: () {
-                        // Handle decrease quantity
-                      },
-                    ),
-                    Text(
-                      '1',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 16,
-                        color: Colors.black,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.add_circle, color: Color(0xFF69734E)),
-                      onPressed: () {
-                        // Handle increase quantity
-                      },
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -125,7 +199,7 @@ class CartScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.delete, color: Color.fromARGB(255, 78, 118, 137)),
             onPressed: () {
-              // Handle remove item from cart
+              _handleRemoveCartItem(cartItem.cartId);
             },
           ),
         ],
@@ -152,14 +226,43 @@ class CartScreen extends StatelessWidget {
                   color: Colors.black,
                 ),
               ),
-              Text(
-                '\$552',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+              // Replace with dynamic total calculation
+              FutureBuilder<List<CartItem>>(
+                future: _cartItemsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Text(
+                      '\GHS 0',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    );
+                  } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Text(
+                      '\GHS 0',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    );
+                  } else {
+                    double total = snapshot.data!.fold(0, (sum, item) => sum + item.price);
+                    return Text(
+                      '\GHS ${total.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    );
+                  }
+                },
               ),
             ],
           ),
@@ -171,30 +274,38 @@ class CartScreen extends StatelessWidget {
   Widget _buildCheckoutButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Center(
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF69734E),
-            padding: EdgeInsets.symmetric(horizontal: 80, vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+      child: FutureBuilder<List<CartItem>>(
+        future: _cartItemsFuture,
+        builder: (context, snapshot) {
+          final isCartEmpty = !snapshot.hasData || snapshot.data!.isEmpty;
+          return Center(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isCartEmpty ? Colors.grey : Color(0xFF69734E),
+                padding: EdgeInsets.symmetric(horizontal: 80, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: isCartEmpty
+                  ? null
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CheckoutScreen()),
+                      );
+                    },
+              child: Text(
+                'Checkout',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
             ),
-          ),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => CheckoutScreen()),
-            );
-          },
-          child: Text(
-            'Checkout',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              color: Colors.white,
-              fontSize: 16,
-            ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

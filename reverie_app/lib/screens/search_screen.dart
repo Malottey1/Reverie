@@ -1,7 +1,25 @@
 import 'package:flutter/material.dart';
-import 'product_results_screen.dart'; // Import the product results screen
+import 'product_results_screen.dart';
+import '../services/api_connection.dart';
 
-class SearchScreen extends StatelessWidget {
+class SearchScreen extends StatefulWidget {
+  @override
+  _SearchScreenState createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  TextEditingController _searchController = TextEditingController();
+  List<String> _categories = ['Men', 'Women', 'Kids', 'Tops', 'Dresses', 'Accessories'];
+
+  void _performSearch(String query) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductResultsScreen(searchQuery: query),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,6 +34,7 @@ class SearchScreen extends StatelessWidget {
           },
         ),
         title: TextField(
+          controller: _searchController,
           decoration: InputDecoration(
             hintText: 'Search...',
             border: InputBorder.none,
@@ -30,18 +49,20 @@ class SearchScreen extends StatelessWidget {
             color: Colors.black,
           ),
           cursorColor: Color(0xFF69734E),
+          onSubmitted: (query) {
+            _performSearch(query);
+          },
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
+        child: Column(
           children: [
-            _buildCategoryItem(context, 'Men'),
-            _buildCategoryItem(context, 'Women'),
-            _buildCategoryItem(context, 'Kids'),
-            _buildCategoryItem(context, 'Shoes'),
-            _buildCategoryItem(context, 'Bags'),
-            _buildCategoryItem(context, 'Watches'),
+            Expanded(
+              child: ListView(
+                children: _categories.map((category) => _buildCategoryItem(context, category)).toList(),
+              ),
+            ),
           ],
         ),
       ),
@@ -51,12 +72,7 @@ class SearchScreen extends StatelessWidget {
   Widget _buildCategoryItem(BuildContext context, String category) {
     return InkWell(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductResultsScreen(category: category),
-          ),
-        );
+        _performSearch(category);
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8.0),

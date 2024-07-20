@@ -1,4 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:reverie_app/screens/login_screen.dart';
+import '../providers/user_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -6,26 +11,17 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Map<String, String> userInfo = {
-    'Email': 'clatteymolcolm4@gmail.com',
-    'First name': 'Malcolm',
-    'Last name': 'Clottey',
-    'Date of birth': '03/09/2003',
-    'Phone number': '+13014589407',
-    'Gender': 'Male',
-    'Zip Code': '22407-9264',
-  };
-
   Map<String, TextEditingController> controllers = {};
-
   bool isEditing = false;
 
   @override
   void initState() {
     super.initState();
-    userInfo.forEach((key, value) {
-      controllers[key] = TextEditingController(text: value);
-    });
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    controllers['Email'] = TextEditingController(text: userProvider.email);
+    controllers['First name'] = TextEditingController(text: userProvider.firstName);
+    controllers['Last name'] = TextEditingController(text: userProvider.lastName);
+    // Add more controllers if needed
   }
 
   @override
@@ -43,12 +39,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void saveChanges() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     setState(() {
-      userInfo.forEach((key, value) {
-        userInfo[key] = controllers[key]!.text;
-      });
+      userProvider.setUserInfo(
+        controllers['First name']!.text,
+        controllers['Last name']!.text,
+        controllers['Email']!.text,
+      );
+      // Save additional user info if needed
       isEditing = false;
     });
+  }
+
+  Future<void> _deleteAccount(BuildContext context, int userId) async {
+    final url = 'https://reverie.newschateau.com/api/reverie/delete_account.php';
+    try {
+      print('Sending delete request for user ID: $userId');
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'user_id': userId}),
+      );
+
+      final decodedResponse = json.decode(response.body);
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(decodedResponse['message'])),
+        );
+        if (decodedResponse['message'] == 'Account deleted successfully') {
+          final userProvider = Provider.of<UserProvider>(context, listen: false);
+          print('UserProvider state before sign out: ${userProvider.toString()}');
+          userProvider.signOut();
+          print('UserProvider state after sign out: ${userProvider.toString()}');
+          print('Navigating to login screen...');
+          Future.delayed(Duration.zero, () {
+            Navigator.of(context, rootNavigator: true).pushReplacementNamed('/login');
+            print('Navigation to login screen attempted.');
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete account: ${decodedResponse['message']}')),
+        );
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _changePassword(int userId, String newPassword) async {
+    final url = 'https://reverie.newschateau.com/api/reverie/change_password.php';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'user_id': userId, 'new_password': newPassword}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'])),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to change password')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   void _handleChangePassword() {
@@ -76,8 +144,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             TextButton(
               child: Text('Change'),
-              onPressed: () {
-                // Handle password change logic here
+              onPressed: () async {
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                if (userProvider.userId != null) {
+                  await _changePassword(userProvider.userId!, newPassword);
+                }
                 Navigator.of(context).pop();
               },
             ),
@@ -103,8 +174,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             TextButton(
               child: Text('Delete'),
-              onPressed: () {
-                // Handle account deletion logic here
+              onPressed: () async {
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                if (userProvider.userId != null) {
+                  await _deleteAccount(context, userProvider.userId!);
+                }
                 Navigator.of(context).pop();
               },
             ),
@@ -116,6 +190,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    print('Building SettingsScreen with userProvider state: ${userProvider.toString()}');
+
     return Scaffold(
       backgroundColor: Color(0xFFDDDBD3),
       appBar: AppBar(
@@ -154,14 +231,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           children: [
             _buildSectionHeader(context, 'Personal Details'),
-            ...userInfo.keys.map((key) => _buildEditableInfo(key)).toList(),
+            _buildEditableInfo('Email', userProvider.email),
+            _buildEditableInfo('First name', userProvider.firstName),
+            _buildEditableInfo('Last name', userProvider.lastName),
+            // Add more fields if needed
             SizedBox(height: 20),
             _buildSectionHeader(context, 'Privacy'),
             _buildPrivacyOptions(),
           ],
         ),
       ),
-    );
+    );   
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {
@@ -179,7 +259,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildEditableInfo(String label) {
+  Widget _buildEditableInfo(String label, String? value) {
     return ListTile(
       title: Text(
         label,
@@ -199,7 +279,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             )
           : Text(
-              userInfo[label]!,
+              value ?? '',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 16,
@@ -234,7 +314,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               fontFamily: 'Poppins',
               fontSize: 14,
               color: Color(0xFF69734E),
-              decoration: TextDecoration.underline,
+                           decoration: TextDecoration.underline,
             ),
           ),
         ),
@@ -244,7 +324,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 void main() {
-  runApp(MaterialApp(
-    home: SettingsScreen(),
-  ));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserProvider(),
+      child: MaterialApp(
+        home: SettingsScreen(),
+        routes: {
+          '/login': (context) => LoginScreen(), // Ensure this route is defined
+        },
+      ),
+    ),
+  );
 }
