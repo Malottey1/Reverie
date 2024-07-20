@@ -72,7 +72,7 @@ class ProductResultsScreen extends StatelessWidget {
                     'title': product['title'],
                     'price': product['price'],
                     'old_price': product['old_price'],
-                    'image_url': 'http://192.168.104.167/api/reverie/product-images/' + product['image_path'],
+                    'image_url': 'https://reverie.newschateau.com/api/reverie/product-images/' + product['image_path'],
                     'description': product['description'],
                     'size_name': product['size_name'],
                     'brand': product['brand'],
@@ -91,7 +91,7 @@ class ProductResultsScreen extends StatelessWidget {
   Widget _buildProductItem(dynamic product) {
     String imageUrl = product['image_path'];
     if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
-      imageUrl = 'http://192.168.104.167/api/reverie/product-images/' + imageUrl; 
+      imageUrl = 'https://reverie.newschateau.com/api/reverie/product-images/' + imageUrl; 
     }
 
     return Container(
@@ -109,45 +109,24 @@ class ProductResultsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                child: Image.network(
-                  imageUrl,
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            child: Image.network(
+              imageUrl,
+              width: double.infinity,
+              height: 150, // Reduced height
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
                   width: double.infinity,
-                  height: 172,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: double.infinity,
-                      height: 172,
-                      color: Colors.grey,
-                      child: Center(
-                        child: Icon(Icons.image, color: Colors.white),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              if (product['discount'] != null)
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    color: Colors.red,
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Text(
-                      '-${product['discount']}%',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                    ),
+                  height: 150, // Reduced height
+                  color: Colors.grey,
+                  child: Center(
+                    child: Icon(Icons.image, color: Colors.white),
                   ),
-                ),
-            ],
+                );
+              },
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -160,13 +139,13 @@ class ProductResultsScreen extends StatelessWidget {
                 color: Colors.black,
               ),
               overflow: TextOverflow.ellipsis,
-              maxLines: 2,
+              maxLines: 1, // Reduced maxLines
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
-              '\$${product['price']}',
+              '\GHS ${product['price']}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
@@ -179,7 +158,7 @@ class ProductResultsScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Text(
-                '\$${product['original_price']}',
+                '\GHS ${product['original_price']}',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12,

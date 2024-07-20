@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:reverie_app/screens/cart_screen.dart';
 import 'package:reverie_app/services/api_connection.dart';
 import '/providers/user_provider.dart';
 import 'package:art_sweetalert/art_sweetalert.dart'; // import ArtSweetAlert
@@ -89,11 +90,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.shopping_cart, color: Colors.black),
-            onPressed: () {
-              // Handle cart action
-            },
-          ),
+          icon: Icon(Icons.shopping_cart, color: Colors.black),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CartScreen()),
+            );
+          },
+        ),
         ],
       ),
       body: SingleChildScrollView(
@@ -144,7 +148,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ),
           ),
           Text(
-            '\$${widget.product['price'].toString()}',
+            '\GHS ${widget.product['price'].toString()}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,
@@ -285,7 +289,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ),
           ),
           Text(
-            '\$${product['price'] ?? 'N/A'}',
+            '\GHS ${product['price'] ?? 'N/A'}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,

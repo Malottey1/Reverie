@@ -15,9 +15,9 @@ Future<void> initializeNotifications() async {
 
 Future<void> showNotification(String title, String body) async {
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'your_channel_id', // id
-    'your_channel_name', // name
-    description: 'your_channel_description', // description
+    'Order', // id
+    'Order Placed', // name
+    description: 'Order', // description
     importance: Importance.max,
   );
 

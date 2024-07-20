@@ -77,6 +77,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your first name';
                       }
+                      if (value.length < 2) {
+                        return 'First name must be at least 2 characters long';
+                      }
+                      if (value.length > 30) {
+                        return 'First name must be less than 30 characters long';
+                      }
+                      if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(value)) {
+                        return 'First name can only contain letters and spaces';
+                      }
                       return null;
                     },
                   ),
@@ -87,6 +96,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your last name';
+                      }
+                      if (value.length < 2) {
+                        return 'Last name must be at least 2 characters long';
+                      }
+                      if (value.length > 30) {
+                        return 'Last name must be less than 30 characters long';
+                      }
+                      if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(value)) {
+                        return 'Last name can only contain letters and spaces';
                       }
                       return null;
                     },
@@ -102,6 +120,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                         return 'Please enter a valid email address';
                       }
+                      // Additional unique email validation should be done server-side
                       return null;
                     },
                   ),
@@ -114,8 +133,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a password';
                       }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters long';
+                      if (value.length < 8) {
+                        return 'Password must be at least 8 characters long';
+                      }
+                      if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]').hasMatch(value)) {
+                        return 'Password must include an uppercase letter, lowercase letter, number, and special character';
                       }
                       return null;
                     },
@@ -162,6 +184,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           if (value == null || value.isEmpty) {
                             return 'Please select your birthday';
                           }
+                          final date = DateTime.tryParse(value);
+                          if (date == null) {
+                            return 'Invalid date format';
+                          }
+                          final age = DateTime.now().difference(date).inDays ~/ 365;
+                          if (age < 18) {
+                            return 'You must be at least 18 years old';
+                          }
                           return null;
                         },
                       ),
@@ -177,9 +207,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       padding: EdgeInsets.symmetric(horizontal: 130, vertical: 10),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        _controller.register(context);
+                        try {
+                          // Log the data being sent
+                          print('Registering user with data:');
+                          print('First Name: ${_controller.firstNameController.text}');
+                          print('Last Name: ${_controller.lastNameController.text}');
+                          print('Email: ${_controller.emailController.text}');
+                          print('Gender: ${_controller.gender}');
+                          print('Birthday: ${_controller.birthdayController.text}');
+
+                          await _controller.register(context);
+                        } catch (e) {
+                          print('Exception occurred while registering user: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to register user: $e')),
+                          );
+                        }
                       }
                     },
                     child: Text(

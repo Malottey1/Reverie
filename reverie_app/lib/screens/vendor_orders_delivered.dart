@@ -58,7 +58,7 @@ class VendorOrdersDeliveredScreen extends StatelessWidget {
         _buildInfoRow('Order number:', order['order_id'].toString()),
         _buildInfoRow('Date:', order['created_at']),
         _buildInfoRow('Items:', (order['items'] as List).length.toString()),
-        _buildInfoRow('Total:', '\$${order['total_amount']}'),
+        _buildInfoRow('Total:', '\GHS ${order['total_amount']}'),
       ],
     );
   }
@@ -142,7 +142,7 @@ class VendorOrdersDeliveredScreen extends StatelessWidget {
                   ),
                 if (price.isNotEmpty)
                   Text(
-                    '\$$price',
+                    '\GHS $price',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 14,
@@ -177,10 +177,10 @@ class VendorOrdersDeliveredScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInfoRow('Subtotal:', '\$${order['total_amount']}'),
-        _buildInfoRow('Delivery:', '\$0'), // Placeholder
-        _buildInfoRow('Taxes:', '\$73.92'), // Placeholder
-        _buildInfoRow('Commission:', '\$30'), // Placeholder
+        _buildInfoRow('Subtotal:', '\GHS ${order['total_amount']}'),
+        _buildInfoRow('Delivery:', '\GHS 0'), // Placeholder
+        _buildInfoRow('Taxes:', '\GHS 73.92'), // Placeholder
+        _buildInfoRow('Commission:', '\GHS 30'), // Placeholder
       ],
     );
   }
@@ -189,7 +189,7 @@ class VendorOrdersDeliveredScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInfoRow('Total:', '\$930.92'), // Placeholder
+        _buildInfoRow('Total:', '\GHS 930.92'), // Placeholder
       ],
     );
   }

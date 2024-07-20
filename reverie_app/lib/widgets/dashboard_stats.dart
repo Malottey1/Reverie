@@ -13,7 +13,7 @@ class DashboardStats extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            StatCard(value: '\$${stats['earnings']}', label: 'Earnings this month'),
+            StatCard(value: '\GHS ${stats['earnings']}', label: 'Earnings this month'),
             StatCard(value: '${stats['total_orders']}', label: 'Total orders'),
           ],
         ),

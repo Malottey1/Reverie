@@ -23,8 +23,8 @@ class QuickStockUpScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  _buildInventoryItem('Palm leaf print dress', '\$120', '3 items', 'assets/dress.jpg', 3),
-                  _buildInventoryItem('Black leather jacket', '\$140', '2 items', 'assets/jacket.jpg', 2),
+                  _buildInventoryItem('Palm leaf print dress', '\GHS 120', '3 items', 'assets/dress.jpg', 3),
+                  _buildInventoryItem('Black leather jacket', '\GHS 140', '2 items', 'assets/jacket.jpg', 2),
                   // Add more items as needed
                 ],
               ),

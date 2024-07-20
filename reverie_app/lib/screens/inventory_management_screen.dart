@@ -126,7 +126,7 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
   Widget _buildInventoryItem(Map<String, dynamic> product) {
     String imageUrl = product['image_path'];
     if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
-      imageUrl = 'http://192.168.104.167/api/reverie/product-images/' + imageUrl;
+      imageUrl = 'https://reverie.newschateau.com/api/reverie/product-images/' + imageUrl;
     }
 
     return Container(
@@ -172,7 +172,7 @@ class _InventoryManagementScreenState extends State<InventoryManagementScreen> {
                   softWrap: true,
                 ),
                 Text(
-                  '\$${product['price']}',
+                  '\GHS ${product['price']}',
                   style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Colors.black54),
                   softWrap: true,
                 ),

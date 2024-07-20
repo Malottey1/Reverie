@@ -23,7 +23,7 @@ class ProductTitleAndPrice extends StatelessWidget {
             ),
           ),
           Text(
-            '\$${price.toString()}',
+            '\GHS ${price.toString()}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,

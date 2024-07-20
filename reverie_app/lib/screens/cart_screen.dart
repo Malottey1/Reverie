@@ -178,7 +178,7 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                 ),
                 Text(
-                  '\$${cartItem.price}',
+                  '\GHS ${cartItem.price}',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 16,
@@ -232,7 +232,7 @@ class _CartScreenState extends State<CartScreen> {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Text(
-                      '\$0',
+                      '\GHS 0',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 18,
@@ -242,7 +242,7 @@ class _CartScreenState extends State<CartScreen> {
                     );
                   } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
                     return Text(
-                      '\$0',
+                      '\GHS 0',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 18,
@@ -253,7 +253,7 @@ class _CartScreenState extends State<CartScreen> {
                   } else {
                     double total = snapshot.data!.fold(0, (sum, item) => sum + item.price);
                     return Text(
-                      '\$${total.toStringAsFixed(2)}',
+                      '\GHS ${total.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 18,

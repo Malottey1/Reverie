@@ -20,12 +20,12 @@ class LoginController {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.104.167/api/reverie/login.php'),
+        Uri.parse('https://reverie.newschateau.com/api/reverie/login.php'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': email, 'password': password}),
       );
 
-      print('Request URL: http://192.168.104.167/api/reverie/login.php');
+      print('Request URL: https://reverie.newschateau.com/api/reverie/login.php');
       print('Request Body: ${json.encode({'email': email, 'password': password})}');
       print('Response Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');

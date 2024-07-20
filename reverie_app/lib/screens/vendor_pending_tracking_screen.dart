@@ -28,6 +28,12 @@ class _VendorPendingTrackingScreenState extends State<VendorPendingTrackingScree
     return await apiConnection.fetchVendorTracking(orderId);
   }
 
+  Future<void> _refreshData() async {
+    setState(() {
+      _trackingDetailsFuture = fetchTrackingDetails(widget.orderId);
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -87,19 +93,23 @@ class _VendorPendingTrackingScreenState extends State<VendorPendingTrackingScree
               ),
               centerTitle: true,
             ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildOrderSummary(trackingDetails),
-                  SizedBox(height: 20),
-                  _buildOrderInfo(widget.orderId),
-                  SizedBox(height: 20),
-                  _buildItemsInfo(trackingDetails['items']),
-                  SizedBox(height: 20),
-                  _buildPickupStatus(trackingDetails['status'], trackingDetails['estimated_delivery_date']),
-                ],
+            body: RefreshIndicator(
+              onRefresh: _refreshData,
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildOrderSummary(trackingDetails),
+                    SizedBox(height: 20),
+                    _buildOrderInfo(widget.orderId),
+                    SizedBox(height: 20),
+                    _buildItemsInfo(trackingDetails['items']),
+                    SizedBox(height: 20),
+                    _buildPickupStatus(trackingDetails['status'], trackingDetails['estimated_delivery_date']),
+                  ],
+                ),
               ),
             ),
           );

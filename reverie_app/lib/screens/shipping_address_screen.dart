@@ -32,7 +32,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
     _cityController = TextEditingController(text: '');
     _postalCodeController = TextEditingController(text: '');
     _stateController = TextEditingController(text: '');
-    _countryController = TextEditingController(text: '');
+    _countryController = TextEditingController(text: 'Ghana'); // Pre-fill country as Ghana
   }
 
   @override
@@ -53,7 +53,7 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
     print("Saving shipping address for user_id: ${userProvider.userId}");
     if (_formKey.currentState!.validate()) {
       final response = await http.post(
-        Uri.parse('http://192.168.104.167/api/reverie/update_shipping_address.php'),
+        Uri.parse('https://reverie.newschateau.com/api/reverie/update_shipping_address.php'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -123,11 +123,11 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
               _buildTextField('First Name', _firstNameController),
               _buildTextField('Last Name', _lastNameController),
               _buildTextField('Address', _addressController),
-              _buildTextField('Address Line 2', _addressLine2Controller),
+              _buildTextField('Address Line 2', _addressLine2Controller, required: false),
               _buildTextField('City', _cityController),
-              _buildTextField('Postal Code', _postalCodeController),
-              _buildTextField('State', _stateController),
-              _buildTextField('Country', _countryController),
+              _buildTextField('Postal Code', _postalCodeController, required: false),
+              _buildTextField('State', _stateController, required: false),
+              _buildTextField('Country', _countryController, readOnly: true),
               SizedBox(height: 20),
               _buildSaveButton(context),
             ],
@@ -137,11 +137,12 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
+  Widget _buildTextField(String label, TextEditingController controller, {bool required = true, bool readOnly = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
         controller: controller,
+        readOnly: readOnly,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
@@ -151,12 +152,14 @@ class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
             borderSide: BorderSide(color: Colors.black),
           ),
         ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return '$label cannot be empty';
-          }
-          return null;
-        },
+        validator: required
+            ? (value) {
+                if (value == null || value.isEmpty) {
+                  return '$label cannot be empty';
+                }
+                return null;
+              }
+            : null,
       ),
     );
   }
