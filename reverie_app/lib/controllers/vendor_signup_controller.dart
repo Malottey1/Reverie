@@ -88,7 +88,7 @@ class VendorSignupController {
     }
 
     try {
-      final request = http.MultipartRequest('POST', Uri.parse('http://192.168.104.167/api/reverie/register_vendor.php'));
+      final request = http.MultipartRequest('POST', Uri.parse('https://reverie.newschateau.com/api/reverie/register_vendor.php'));
       vendorData.forEach((key, value) {
         if (value != null) {
           request.fields[key] = value;

@@ -34,36 +34,39 @@ class VendorOrderDetailsScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _fetchOrderDetails(context),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else {
-            final orderDetails = snapshot.data!;
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildOrderInfo(orderDetails),
-                  SizedBox(height: 20),
-                  _buildOrderItems(orderDetails['items']),
-                  SizedBox(height: 20),
-                  _buildTransactionInfo(orderDetails),
-                  SizedBox(height: 20),
-                  _buildCommissionInfo(orderDetails),
-                  SizedBox(height: 8),
-                  _buildTotalInfo(orderDetails),
-                  Spacer(),
-                  Center(child: _buildMarkAsReadyButton(context)),
-                ],
-              ),
-            );
-          }
-        },
+      body: RefreshIndicator(
+        onRefresh: () => _fetchOrderDetails(context),
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _fetchOrderDetails(context),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else {
+              final orderDetails = snapshot.data!;
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildOrderInfo(orderDetails),
+                    SizedBox(height: 20),
+                    _buildOrderItems(orderDetails['items']),
+                    SizedBox(height: 20),
+                    _buildTransactionInfo(orderDetails),
+                    SizedBox(height: 20),
+                    _buildCommissionInfo(orderDetails),
+                    SizedBox(height: 8),
+                    _buildTotalInfo(orderDetails),
+                    SizedBox(height: 20),
+                    Center(child: _buildMarkAsReadyButton(context)),
+                  ],
+                ),
+              );
+            }
+          },
+        ),
       ),
     );
   }
@@ -85,7 +88,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
         _buildInfoRow('Order number:', orderDetails['order_id']?.toString() ?? 'N/A'),
         _buildInfoRow('Date:', orderDetails['transactionDate'] ?? 'N/A'),
         _buildInfoRow('Items:', (orderDetails['items']?.length ?? 0).toString()),
-        _buildInfoRow('Total:', '\$${orderDetails['total'] ?? 'N/A'}'),
+        _buildInfoRow('Total:', '\GHS ${orderDetails['total'] ?? 'N/A'}'),
       ],
     );
   }
@@ -145,7 +148,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '\$$price',
+                  '\GHS $price',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
@@ -174,10 +177,10 @@ class VendorOrderDetailsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInfoRow('Subtotal:', '\$${orderDetails['subtotal'] ?? 'N/A'}'),
-        _buildInfoRow('Delivery:', '\$${orderDetails['delivery'] ?? 'N/A'}'),
-        _buildInfoRow('Taxes:', '\$${orderDetails['taxes'] ?? 'N/A'}'),
-        _buildInfoRow('Commission:', '\$${orderDetails['commission'] ?? 'N/A'}'),
+        _buildInfoRow('Subtotal:', '\GHS ${orderDetails['subtotal'] ?? 'N/A'}'),
+        _buildInfoRow('Delivery:', '\GHS ${orderDetails['delivery'] ?? 'N/A'}'),
+        _buildInfoRow('Taxes:', '\GHS ${orderDetails['taxes'] ?? 'N/A'}'),
+        _buildInfoRow('Commission:', '\GHS ${orderDetails['commission'] ?? 'N/A'}'),
       ],
     );
   }
@@ -186,7 +189,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildInfoRow('Total:', '\$${orderDetails['total'] ?? 'N/A'}'),
+        _buildInfoRow('Total:', '\GHS ${orderDetails['total'] ?? 'N/A'}'),
       ],
     );
   }
@@ -272,7 +275,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
   }
 
   void _markAsReady(BuildContext context) async {
-    final url = 'http://192.168.104.167/api/reverie/update_order_ready_status.php';
+    final url = 'https://reverie.newschateau.com/api/reverie/update_order_ready_status.php';
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -302,7 +305,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
       }
     } catch (e) {
       print('Exception: $e');
-            ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update order status: $e')),
       );
     }

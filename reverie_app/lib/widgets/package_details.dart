@@ -73,7 +73,7 @@ class PackageDetails extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '\$${item.price.toStringAsFixed(2)}',
+                                '\GHS ${item.price.toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                 ),

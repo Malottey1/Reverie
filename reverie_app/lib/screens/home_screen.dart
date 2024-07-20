@@ -197,104 +197,112 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget buildTabContent(List<dynamic> products, String? targetGroup, String? category) {
-    final filteredProducts = products.where((product) {
-      final matchesTargetGroup = targetGroup == null || product['target_group_name'] == targetGroup;
-      final matchesCategory = category == null || product['category_name'] == category;
-      return matchesTargetGroup && matchesCategory;
-    }).toList();
+  final filteredProducts = products.where((product) {
+    final matchesTargetGroup = targetGroup == null || product['target_group_name'] == targetGroup;
+    final matchesCategory = category == null || product['category_name'] == category;
+    return matchesTargetGroup && matchesCategory;
+  }).toList();
 
-    if (filteredProducts.isEmpty) {
-      return Center(child: Text('No products available'));
-    }
+  if (filteredProducts.isEmpty) {
+    return Center(child: Text('No products available'));
+  }
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (filteredProducts.isNotEmpty)
-                  Expanded(
-                    child: ProductItem(
-                      imagePath: filteredProducts[0]['image_url'] ?? '',
-                      title: filteredProducts[0]['title'] ?? 'No Title',
-                      onBuyNow: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProductDetailsScreen(product: filteredProducts[0]),
-                          ),
-                        );
-                      },
-                    ),
+  return SingleChildScrollView(
+    child: Padding(
+      padding: const EdgeInsets.all(15.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 5),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (filteredProducts.isNotEmpty)
+                Expanded(
+                  child: ProductItem(
+                    imagePath: filteredProducts[0]['image_url'] ?? '',
+                    title: filteredProducts[0]['title'] ?? 'No Title',
+                    onBuyNow: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailsScreen(product: filteredProducts[0]),
+                        ),
+                      );
+                    },
                   ),
-                SizedBox(width: 10),
-                if (filteredProducts.length > 1)
-                  Expanded(
-                    child: ProductItem(
-                      imagePath: filteredProducts[1]['image_url'] ?? '',
-                      title: filteredProducts[1]['title'] ?? 'No Title',
-                      onBuyNow: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProductDetailsScreen(product: filteredProducts[1]),
-                          ),
-                        );
-                      },
-                    ),
+                ),
+              SizedBox(width: 10),
+              if (filteredProducts.length > 1)
+                Expanded(
+                  child: ProductItem(
+                    imagePath: filteredProducts[1]['image_url'] ?? '',
+                    title: filteredProducts[1]['title'] ?? 'No Title',
+                    onBuyNow: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailsScreen(product: filteredProducts[1]),
+                        ),
+                      );
+                    },
                   ),
-              ],
+                ),
+            ],
+          ),
+          SizedBox(height: 20),
+          Text(
+            'Top Categories',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+              color: Colors.black,
             ),
-            SizedBox(height: 20),
-            Text(
-              'Top Categories',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
-                color: Colors.black,
-              ),
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CategoryItem(
+          ),
+          SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: CategoryItem(
                   title: 'Watches',
                   imagePath: 'assets/watches.jpg',
                   onTap: () => _performSearch('Watch'),
                 ),
-                CategoryItem(
+              ),
+              Expanded(
+                child: CategoryItem(
                   title: 'Handbags',
                   imagePath: 'assets/handbags.png',
                   onTap: () => _performSearch('Handbag'),
                 ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CategoryItem(
+              ),
+            ],
+          ),
+          SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: CategoryItem(
                   title: 'Jackets',
                   imagePath: 'assets/jackets.png',
                   onTap: () => _performSearch('Jacket'),
                 ),
-                CategoryItem(
+              ),
+              Expanded(
+                child: CategoryItem(
                   title: 'Sweaters',
                   imagePath: 'assets/sweaters.png',
                   onTap: () => _performSearch('Sweater'),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:reverie_app/routes/slide_left_route.dart';
+import 'package:reverie_app/screens/onboarding_screen.dart';
 import '../routes/slide_right_route.dart';
 import 'register_screen.dart';
 import '../controllers/login_controller.dart';
@@ -87,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      SlideRightRoute(page: RegisterScreen()),
+                      SlideLeftRoute(page: OnboardingScreen()),
                     );
                   },
                   child: Padding(

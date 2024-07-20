@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reverie_app/screens/home_screen.dart';
+import 'package:reverie_app/screens/login_screen.dart';
+import 'package:reverie_app/screens/vendor_orders_screen.dart';
 import 'add_product_screen.dart';
 import 'vendor_dashboard_screen.dart';
-import 'inventory_management_screen.dart'; // Import the inventory management screen
+import 'inventory_management_screen.dart';
 import 'vendor_edit_profile_screen.dart';
-import '../providers/user_provider.dart'; // Import UserProvider
-import '../services/api_connection.dart'; // Import ApiConnection
+import '../providers/user_provider.dart';
+import '../services/api_connection.dart';
 
 class VendorStoreScreen extends StatefulWidget {
   @override
@@ -92,7 +94,7 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
                             radius: 40,
                             backgroundColor: Colors.grey,
                             backgroundImage: _vendorDetails?['profile_photo'] != null
-                                ? NetworkImage('http://192.168.104.167/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
+                                ? NetworkImage('https://reverie.newschateau.com/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
                                 : null,
                             child: _vendorDetails?['profile_photo'] == null
                                 ? CircleAvatar(
@@ -196,7 +198,10 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
               );
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/orders');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => VendorOrdersScreen()),
+              );
               break;
             case 4:
               _showSignOutDialog(context);
@@ -213,16 +218,16 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
             label: 'Inventory',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
+            icon: ImageIcon(AssetImage('assets/trend_11902027.png')), 
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
+            icon: ImageIcon(AssetImage('assets/package.png')), 
             label: 'Orders',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Sign Out',
+            icon: Icon(Icons.delete_forever),
+            label: 'Delete',
           ),
         ],
       ),
@@ -234,8 +239,8 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Sign Out'),
-          content: Text('Are you sure you want to sign out?'),
+          title: Text('Delete Store'),
+          content: Text('Are you sure you want to delete this store? This action cannot be undone.'),
           actions: [
             TextButton(
               child: Text('Cancel'),
@@ -244,13 +249,48 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
               },
             ),
             TextButton(
-              child: Text('Sign Out'),
-              onPressed: () {
-                Provider.of<UserProvider>(context, listen: false).signOut();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
-                );
+              child: Text('Delete Store'),
+              onPressed: () async {
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                final vendorId = userProvider.vendorId;
+
+                Navigator.of(context).pop(); // Close the dialog first
+
+                if (vendorId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to delete: vendor ID is required')),
+                  );
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
+                  return;
+                }
+
+                try {
+                  final response = await ApiConnection().deleteVendor(vendorId);
+                  if (response['success'] == true) {
+                    userProvider.signOut();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  } else {
+                    if (response['message'].contains('a foreign key constraint fails')) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to delete store: Please delete all products associated with this vendor first.')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to delete vendor: ${response['message']}')),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to delete vendor: $e')),
+                  );
+                }
               },
             ),
           ],
@@ -269,7 +309,7 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
         style: TextStyle(
           fontFamily: 'Poppins',
           fontSize: 16,
-          color: Color(0xFF69734E),
+          color: Color(0xFF69734E          ),
         ),
       ),
     );
@@ -289,12 +329,6 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
-          ),
-          IconButton(
-            icon: Icon(Icons.arrow_forward, color: Colors.black),
-            onPressed: () {
-              // Handle navigation to collection
-            },
           ),
         ],
       ),
@@ -319,8 +353,8 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
           return _buildProductItem(
             context,
             product['title'],
-            '\$${product['price']}',
-                        product['old_price'] != null ? '\$${product['old_price']}' : '',
+            '\GHS ${product['price']}',
+            product['old_price'] != null ? '\GHS ${product['old_price']}' : '',
             product['is_on_sale'] == 1,
             product['image_path'],
           );
@@ -346,7 +380,7 @@ class _VendorStoreScreenState extends State<VendorStoreScreen> {
                   topRight: Radius.circular(10),
                 ),
                 child: Image.network(
-                  'http://192.168.104.167/api/reverie/product-images/' + imagePath,
+                  'https://reverie.newschateau.com/api/reverie/product-images/' + imagePath,
                   width: double.infinity,
                   height: 172,
                   fit: BoxFit.cover,

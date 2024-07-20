@@ -31,7 +31,7 @@ class RecommendedProductItem extends StatelessWidget {
             ),
           ),
           Text(
-            '\$${product['price'] ?? 'N/A'}',
+            '\GHS ${product['price'] ?? 'N/A'}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,

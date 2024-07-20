@@ -11,11 +11,12 @@ import 'package:intl/intl.dart';
 
 class CheckoutButton extends StatelessWidget {
   final double totalAmount;
+  final VoidCallback onPressed;
 
-  const CheckoutButton({Key? key, required this.totalAmount}) : super(key: key);
+  const CheckoutButton({Key? key, required this.totalAmount, required this.onPressed}) : super(key: key);
 
   Future<void> createOrderTracking(int orderId, String status, String estimatedDeliveryDate) async {
-    final String url = 'http://192.168.104.167/api/reverie/create_order_tracking.php';
+    final String url = 'https://reverie.newschateau.com/api/reverie/create_order_tracking.php';
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -87,7 +88,7 @@ class CheckoutButton extends StatelessWidget {
               await createOrderTracking(orderId, 'Ready', estimatedDeliveryDate);
 
               // Show order placed notification
-              await showNotification('Order Placed', 'Your order has been placed successfully!');
+              await showNotification('Order Placed 📦', 'Your order has been placed successfully!');
               print('Notification should have been shown.');
 
               Navigator.pushReplacement(

@@ -60,12 +60,6 @@ class _StoreScreenState extends State<StoreScreen> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Icon(Icons.star_border, color: Color(0xFF69734E)),
-            onPressed: () {
-              // Implement add product functionality here
-            },
-          ),
         ],
       ),
       body: _isLoading
@@ -84,7 +78,7 @@ class _StoreScreenState extends State<StoreScreen> {
                             radius: 40,
                             backgroundColor: Colors.grey,
                             backgroundImage: _vendorDetails?['profile_photo'] != null
-                                ? NetworkImage('http://192.168.104.167/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
+                                ? NetworkImage('https://reverie.newschateau.com/api/reverie/profile-photos/' + _vendorDetails!['profile_photo'])
                                 : null,
                             child: _vendorDetails?['profile_photo'] == null
                                 ? CircleAvatar(
@@ -119,26 +113,6 @@ class _StoreScreenState extends State<StoreScreen> {
                             ),
                           ),
                           SizedBox(height: 10),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF69734E),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                            ),
-                            onPressed: () {
-                              // Add navigation to edit profile screen if needed
-                            },
-                            child: Text(
-                              'Edit Profile',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -196,12 +170,6 @@ class _StoreScreenState extends State<StoreScreen> {
               color: Colors.black,
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.arrow_forward, color: Colors.black),
-            onPressed: () {
-              // Handle navigation to collection
-            },
-          ),
         ],
       ),
     );
@@ -229,7 +197,7 @@ class _StoreScreenState extends State<StoreScreen> {
                 MaterialPageRoute(
                   builder: (context) => ProductDetailsScreen(product: {
                     ...product,
-                    'image_url': 'http://192.168.104.167/api/reverie/product-images/' + (product['image_path'] ?? ''),
+                    'image_url': 'https://reverie.newschateau.com/api/reverie/product-images/' + (product['image_path'] ?? ''),
                   }),
                 ),
               );
@@ -237,8 +205,8 @@ class _StoreScreenState extends State<StoreScreen> {
             child: _buildProductItem(
               context,
               product['title'],
-              '\$${product['price']}',
-              product['old_price'] != null ? '\$${product['old_price']}' : '',
+              '\GHS${product['price']}',
+              product['old_price'] != null ? '\GHS ${product['old_price']}' : '',
               product['is_on_sale'] == 1,
               product['image_path'],
             ),
@@ -265,7 +233,7 @@ class _StoreScreenState extends State<StoreScreen> {
                   topRight: Radius.circular(10),
                 ),
                 child: Image.network(
-                  'http://192.168.104.167/api/reverie/product-images/' + imagePath,
+                  'https://reverie.newschateau.com/api/reverie/product-images/' + imagePath,
                   width: double.infinity,
                   height: 172,
                   fit: BoxFit.cover,

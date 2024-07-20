@@ -1,10 +1,11 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 import '../models/cart_item.dart';
 import '../models/checkout_info.dart';
 
 class ApiConnection {
-  final String baseUrl = "http://192.168.104.167/api/reverie/";
+  final String baseUrl = "https://reverie.newschateau.com/api/reverie/";
 
   Future<Map<String, dynamic>> registerUser(Map<String, dynamic> user) async {
     final String url = baseUrl + 'register.php';
@@ -606,6 +607,64 @@ Future<Map<String, dynamic>> fetchOrderDetails(String orderId) async {
       }
     } catch (e) {
       throw Exception('Failed to load vendor tracking data: $e');
+    }
+  }
+
+
+Future<Map<String, dynamic>> deleteVendor(int vendorId) async {
+  final url = Uri.parse('$baseUrl/delete_vendor.php');
+  final response = await http.post(
+    url,
+    body: jsonEncode({'vendor_id': vendorId}),
+    headers: {'Content-Type': 'application/json'},
+  );
+
+  if (response.statusCode == 200) {
+    return json.decode(response.body);
+  } else {
+    throw Exception('Failed to delete vendor: ${response.body}');
+  }
+}
+
+  Future<void> updateVendorProfile(Map<String, dynamic> profileData) async {
+    final url = Uri.parse('${baseUrl}edit_profile.php');
+
+    log('Starting profile update...');
+    log('Profile data: $profileData');
+
+    var request = http.MultipartRequest('POST', url);
+
+    profileData.forEach((key, value) {
+      if (value != null) {
+        log('Adding field: $key = $value');
+        request.fields[key] = value.toString();
+      }
+    });
+
+    if (profileData['profile_photo'] != null && profileData['profile_photo'] is String) {
+      log('Adding profile photo...');
+      request.files.add(await http.MultipartFile.fromPath('profile_photo', profileData['profile_photo']));
+    }
+
+    log('Sending request...');
+    var response = await request.send();
+
+    log('Response status: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      var responseData = await response.stream.bytesToString();
+      log('Response data: $responseData');
+      try {
+        var decodedResponse = json.decode(responseData);
+        log('Decoded response: $decodedResponse');
+        if (decodedResponse['message'] != 'Profile updated successfully') {
+          throw Exception('Failed to update profile: ${decodedResponse['message']}');
+        }
+      } catch (e) {
+        log('Error decoding response: $e');
+        throw Exception('Failed to update profile');
+      }
+    } else {
+      throw Exception('Failed to update profile');
     }
   }
 

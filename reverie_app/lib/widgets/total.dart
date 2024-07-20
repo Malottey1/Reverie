@@ -21,7 +21,7 @@ class Total extends StatelessWidget {
             ),
           ),
           Text(
-            '\$${totalAmount.toStringAsFixed(2)}',
+            '\GHS ${totalAmount.toStringAsFixed(2)}',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 18,

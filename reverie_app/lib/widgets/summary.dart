@@ -24,7 +24,7 @@ class Summary extends StatelessWidget {
               ),
             ),
             Text(
-              '\$${orderValue.toStringAsFixed(2)}',
+              '\GHS ${orderValue.toStringAsFixed(2)}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
@@ -42,7 +42,7 @@ class Summary extends StatelessWidget {
               ),
             ),
             Text(
-              '\$${deliveryFee.toStringAsFixed(2)}',
+              '\GHS ${deliveryFee.toStringAsFixed(2)}',
               style: TextStyle(
                 fontFamily: 'Poppins',
               ),
@@ -59,7 +59,7 @@ class Summary extends StatelessWidget {
               ),
             ),
             Text(
-              '\$${estimatedTaxes.toStringAsFixed(2)}',
+              '\GHS ${estimatedTaxes.toStringAsFixed(2)}',
               style: TextStyle(
                 fontFamily: 'Poppins',
               ),
