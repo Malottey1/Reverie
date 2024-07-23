@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Tracking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #DDDBD3;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .tracking-container {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+        }
+        .vendor-tracking, .buyer-tracking {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            width: 45%;
+        }
+        h1, h2 {
+            color: #69734E;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .status-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .status-item label {
+            font-weight: bold;
+        }
+        .status-item label span {
+            font-weight: normal;
+            display: block;
+        }
+        .submit-btn {
+            background-color: #69734E;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .submit-btn:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="tracking-container">
+        <div class="vendor-tracking">
+            <h2>Vendor Tracking</h2>
+            <div class="status-item">
+                <input type="checkbox" id="vendor-ready" />
+                <label for="vendor-ready">Ready <span>Your item is ready for pickup.</span></label>
+            </div>
+            <div class="status-item">
+                <input type="checkbox" id="vendor-picked-up" />
+                <label for="vendor-picked-up">Picked Up <span>Your item has been picked up.</span></label>
+            </div>
+            <div class="status-item">
+                <input type="checkbox" id="vendor-delivered" />
+                <label for="vendor-delivered">Delivered <span>Your item has been delivered to the user.</span></label>
+            </div>
+            <button class="submit-btn" onclick="updateVendorStatus()">Update Vendor Status</button>
+        </div>
+
+        <div class="buyer-tracking">
+            <h2>Buyer Tracking</h2>
+            <div class="status-item">
+                <input type="checkbox" id="buyer-ready" />
+                <label for="buyer-ready">Ready <span>Your item is ready for pickup.</span></label>
+            </div>
+            <div class="status-item">
+                <input type="checkbox" id="buyer-picked-up" />
+                <label for="buyer-picked-up">Picked Up <span>Your item has been picked up.</span></label>
+            </div>
+            <div class="status-item">
+                <input type="checkbox" id="buyer-delivered" />
+                <label for="buyer-delivered">Delivered <span>Your item has been delivered.</span></label>
+            </div>
+            <button class="submit-btn" onclick="updateBuyerStatus()">Update Buyer Status</button>
+        </div>
+    </div>
+
+    <script>
+        function updateVendorStatus() {
+            const status = getStatus('vendor');
+            console.log('Vendor status:', status);  // Log the vendor status
+            updateStatus('vendor', status);
+        }
+
+        function updateBuyerStatus() {
+            const status = getStatus('buyer');
+            console.log('Buyer status:', status);  // Log the buyer status
+            updateStatus('buyer', status);
+        }
+
+        function getStatus(type) {
+            if (document.getElementById(`${type}-delivered`).checked) {
+                return 'Delivered';
+            } else if (document.getElementById(`${type}-picked-up`).checked) {
+                return 'Picked Up';
+            } else if (document.getElementById(`${type}-ready`).checked) {
+                return 'Ready';
+            }
+            return 'Ready';
+        }
+
+        function updateStatus(type, status) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://reverie.newschateau.com/api/reverie/update_order_status.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    console.log('HTTP status code:', xhr.status);  // Log the HTTP status code
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        console.log('Response:', response);  // Log the response
+                        alert(response.message);
+                    } else {
+                        console.log('Error response:', xhr.responseText);  // Log the error response
+                    }
+                }
+            };
+
+            const orderId = prompt("Enter the order ID:");
+            if (orderId) {
+                console.log('Order ID:', orderId);  // Log the order ID
+                xhr.send(JSON.stringify({ order_id: orderId, status: status }));
+            } else {
+                alert("Order ID is required.");
+            }
+        }
+    </script>
+</body>
+</html>

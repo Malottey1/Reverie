@@ -1,0 +1,22 @@
+2024-07-13 19:45:29 - No tracking details found for the given Order ID
+2024-07-14 19:56:31 - No tracking details found for the given Order ID
+2024-07-14 19:56:49 - No tracking details found for the given Order ID
+2024-07-14 19:59:42 - No tracking details found for the given Order ID
+2024-07-14 20:00:46 - No tracking details found for the given Order ID
+2024-07-14 20:09:13 - No tracking details found for the given Order ID
+2024-07-18 03:53:02 - No tracking details found for the given Order ID
+2024-07-18 04:50:42 - No tracking details found for the given Order ID
+2024-07-18 04:50:44 - No tracking details found for the given Order ID
+2024-07-18 06:37:13 - No tracking details found for the given Order ID
+2024-07-18 20:37:13 - No tracking details found for the given Order ID
+2024-07-20 16:25:56 - Database connection successful.
+2024-07-20 16:26:41 - Database connection successful.
+2024-07-20 16:26:58 - Database connection successful.
+2024-07-20 16:28:25 - Database connection successful.
+2024-07-20 16:30:47 - Database connection successful.
+2024-07-20 16:32:05 - Database connection successful.
+2024-07-20 16:32:05 - Database connection successful.
+2024-07-20 16:34:51 - Database connection successful.
+2024-07-20 16:35:20 - Database connection successful.
+2024-07-21 14:54:39 - Received input - Order ID: 1, Status: Picked Up
+2024-07-21 14:54:39 - Order status updated successfully for Order ID: 1

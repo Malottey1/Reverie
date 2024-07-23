@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Pay with Paystack</title>
+              <style>
+                body {
+                  font-family: 'Poppins', sans-serif;
+                  background-color: #DDDBD3;
+                  color: #000;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                  margin: 0;
+                  padding: 20px;
+                }
+                form {
+                  padding: 20px;
+                  border-radius: 30px;
+                  width: 100%;
+                  max-width: 400px;
+                }
+                .form-group {
+                  margin-bottom: 15px;
+                }
+                label {
+                  display: block;
+                  margin-bottom: 5px;
+                  font-weight: bold;
+                  color: #69734E;
+                }
+                input {
+                  width: 100%;
+                  padding: 10px;
+                  border: 1px solid #ccc;
+                  border-radius: 12px;
+                  font-family: 'Poppins', sans-serif;
+                }
+                input::placeholder {
+                  color: #ccc;
+                }
+                button {
+                  background-color: #69734E;
+                  color: #fff;
+                  border: none;
+                  padding: 10px 20px;
+                  border-radius: 12px;
+                  cursor: pointer;
+                  width: 100%;
+                  font-size: 16px;
+                  font-family: 'Poppins', sans-serif;
+                  margin-top: 20px;
+                }
+                button:hover {
+                  background-color: #575D3D;
+                }
+                h1 {
+                  text-align: center;
+                  color: #69734E;
+                  margin-bottom: 20px;
+                }
+              </style>
+          </head>
+          <body>
+              <form id="paymentForm">
+                  <h1>Pay With Paystack</h1>
+                  <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email-address" placeholder="Email Address" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="amount">Amount</label>
+                    <input type="tel" id="amount" placeholder="Amount" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="first-name">First Name</label>
+                    <input type="text" id="first-name" placeholder="First Name" />
+                  </div>
+                  <div class="form-group">
+                    <label for="last-name">Last Name</label>
+                    <input type="text" id="last-name" placeholder="Last Name" />
+                  </div>
+                  <div class="form-submit">
+                    <button type="submit" onclick="payWithPaystack(event)"> Pay </button>
+                  </div>
+                </form>
+                
+                <script src="https://js.paystack.co/v2/inline.js"></script>
+                <script>
+                  const paymentForm = document.getElementById('paymentForm');
+                  paymentForm.addEventListener("submit", payWithPaystack, false);
+
+                  function payWithPaystack(e) {
+                    e.preventDefault();
+
+                    const paystack = new PaystackPop();
+                    paystack.newTransaction({
+                      key: 'pk_test_b55d164c97c0e0e80a0d82b89443d7018c40056e', 
+                      email: document.getElementById("email-address").value,
+                      amount: document.getElementById("amount").value * 100,
+                      currency: 'GHS',
+                      onSuccess: (transaction) => {
+                        let message = 'Payment complete! Reference: ' + transaction.reference;
+                        alert(message);
+                        window.postMessage(transaction.reference);
+                      },
+                      onCancel: () => {
+                        alert('Transaction was not completed, window closed.');
+                      }
+                    });
+                  }
+                </script>
+
+          </body>
+          </html>
